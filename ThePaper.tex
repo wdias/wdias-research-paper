@@ -45,7 +45,6 @@
 \begin{document}
 
 \title{WDIAS : A Microservices-Based Weather Data Integration and Assimilation System\\
-% \thanks{Identify applicable funding agency here. If none, delete this.}
 }
 
 \author{\IEEEauthorblockN{Gihan Karunarathne}
@@ -62,7 +61,6 @@ dilumb@cse.mrt.ac.lk}
 \and
 \IEEEauthorblockN{Srikantha Herath}
 \IEEEauthorblockA{\textit{Center for Urban Water, Sri Lanka} \\
-%\textit{Center for Urban Water, Sri Lanka}\\
 Battaramulla, Sri Lanka \\
 admin@curwsl.org}
 }
@@ -71,57 +69,57 @@ admin@curwsl.org}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{abstract}
-Numerical Weather Models (NWMs) utilize data from diverse sources such as automated weather stations, radars, and satellite images. Before use, such multimodal data need to be transcoded into a NWM compatible format. Moreover, the data integration system's response time needs to be relatively low to increase the lead time of forecast for events like hurricanes, and flash floods. The resulting data need to be accessed by many researchers and third-party applications. Even though there are several weather data integration systems available, those are proprietary or closed sourced or based on monolithic or client-server architectures. Hence, it is difficult to customize such software for an island like Sri Lanka with different weather seasons. Therefore, in this paper, we present a weather data integration and assimilation system (WDIAS) that uses modern microservice architecture pattern and container orchestration to run platform independently and support cloud hosting to achieve scalability, high availability with low-cost. WDIAS provides a modular architecture to integrate data from different sources, export into different formats, and the inbuilt extension module system allow users to add new features. Using an experimental setup on the cloud, we demonstrate that WDIAS is capable of handling 18,000 requests per minute with different data types.
+Numerical Weather Models (NWMs) utilize data from diverse sources such as automated weather stations, radars, and satellite images. Such multimodal data need to be transcoded into a NWM compatible format before use. Moreover, the data integration system's response time needs to be relatively low to reduce the time to forecast weather events like hurricanes and flash floods. Furthermore, the resulting data need to be accessed by many researchers and third-party applications. Existing weather data integration systems are based on monolithic or client-server architectures, and are proprietary or closed source. Hence, they are not only expensive to operate in an era of cloud computing, but also challenging to customize for regions with different weather patterns. In this paper, we present a Weather Data Integration and Assimilation System (WDIAS) that uses microservices architecture and container orchestration to achieve high scalability, availability, and low-cost operation. WDIAS provides a modular architecture to integrate data from different sources, enforce data quality controls, export data into different formats, and extend the functionality by adding new modules. Using a synthetic workload and an experimental setup on a public cloud, we demonstrate that WDIAS can handle 300 requests per second with relatively low latency.
 \end{abstract}
 
+
 \begin{IEEEkeywords}
-\db{Cloud computing, data assimilation, data integration, microservice, weather
+Cloud computing, data assimilation, data integration, microservice, weather
 \end{IEEEkeywords}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}
 \label{pse:Introduction}
+%Weather prediction is essential to reduce the impacts caused by natural disasters and to effectively manage natural water resources. To enhance the accuracy of weather predictions, it requires to provide reliable and detailed weather data as inputs to \acrfull{nwm}s. Before feeding such diverse data collected from different sources, we need to convert data into NWMs compatible data format. Further we need to process data with lesser time to increase the lead time of forecasting, and need to handle bulk stream weather data.
+%Many third-party applications and researcher need to accessed processed weather data to make use of them. As few examples, logistics companies could use those data with their models to plan and schedule their deliveries. Agricultural insurance companies can warn the farmers, as well as calculate premiums based on anticipated weather patterns.
+%Even though there are many data integration systems, most systems are proprietary or closed source. For an island like Sri Lanka that having different kinds of weather seasons over the year than that software originated countries, those systems need to be highly customized. Thus it required to get support from the vendor to integrate and configure the system.
+%Most of the software existing out there are not up to date with the latest technology concepts such as Cloud Computing, and not using modern architecture pattern like microservice architecture that can use to build highly scalable and available systems, and use containerized applications to run systems independ of software platforms.
 
-Weather prediction is essential to reduce the impacts caused by natural disasters and to effectively manage natural water resources. To enhance the accuracy of weather predictions, it requires to provide reliable and detailed weather data as inputs to \acrfull{nwm}s. Before feeding such diverse data collected from different sources, we need to convert data into NWMs compatible data format. Further we need to process data with lesser time to increase the lead time of forecasting, and need to handle bulk stream weather data.
-Many third-party applications and researcher need to accessed processed weather data to make use of them. As few examples, logistics companies could use those data with their models to plan and schedule their deliveries. Agricultural insurance companies can warn the farmers, as well as calculate premiums based on anticipated weather patterns.
-Even though there are many data integration systems, most systems are proprietary or closed source. For an island like Sri Lanka that having different kinds of weather seasons over the year than that software originated countries, those systems need to be highly customized. Thus it required to get support from the vendor to integrate and configure the system.
-Most of the software existing out there are not up to date with the latest technology concepts such as Cloud Computing, and not using modern architecture pattern like microservice architecture that can use to build highly scalable and available systems, and use containerized applications to run systems independ of software platforms.
-\dbc{This para needs to be more specific. For e.g., some of the key motivations listed in Abstract is not listed here. Also, they should ideally be an expanded version of the motivation.}
-\gkc{Updated referring to motivation section.}
+Weather prediction is essential to reduce impact due to natural disasters and to manage natural resources like water effectively. To enhance the accuracy of weather predictions, it is necessary to provide reliable and detailed weather data as inputs to \acrfull{nwm}s. Before feeding multimodal data collected from different sources into a NWM, they need to be converted to a format that can be ingested by the NWM. Further, the velocity and volume of data vary from event-driven bulk uploads to streaming data. Such data need to be ingested, converted, stored, and accessed with minimal latency, especially when forecasting time-sensitive weather events. Processed weather data may also need to be accessed by many third-party applications and researchers. For example, logistics and insurance companies could use weather data for planning purposes or set their service fees or premiums based on anticipated weather patterns.
 
-\db{Several forecasting systems are} developed with considering above factors for disaster management. Deltares developed the The \acrfull{fews}\cite{Werner2013TheSystem} in the Netherland for operational forecasting. It uses a model-centric approach, and implements the forecasting process as a combination of data modeling steps and data transformation algorithms. This framework does not have inherent hydrological modeling capabilities. But it capable of providing capability to create forecast workflows by integrate new models and algorithms. Also it uses a common data-model approach, and only allows models to interact with the system data via using one of the interfaces provided. All the timeseries data store in the common data model. This approach can consider as efficient for data store and access, but it has the inherent performance issues of access data in the database through a single data model. Interestly, the \acrshort{fews} uses set of unique fields to identify timeseries one from another such as using timeseries's location and data type, as well as an id related to the source of the data. It provides an easy model integration with using the concept of the open modeling framework proposed by Open model integration \cite{Kokkonen2003InterfacingXML}. But the model adapter causes tide couple between models and the execution process of the \acrshort{fews}. This can cause issues when it required to do model unit testing and restrict the flexibility of running the models with parallel execution or external process execution.
+Several data integration systems are designed for weather-related use cases. For example, \acrshort{fews} \cite{Werner2013TheSystem} uses a model-centric approach where it handles the forecasting process as a combination of data modeling steps and data transformation algorithms. It creates forecasting workflows by integrating new models and algorithms based on the open model integration framework \cite{Kokkonen2003InterfacingXML}. \acrshort{fews} follows a common data model and enforces data access via a well-defined interface. While such a design leads to efficient data access and management, it requires all NWMs and connected systems to comply with the common data model, tightly couples the models, and serializes the model execution. 
+\acrfull{lead} \cite{Droegemeier2005Service-OrientedWeather} provides dynamic workflow orchestration and data management based on Web-services. It provides several service layers based on the \acrfull{soa}, exposes services via a drag-and-drop interface to create new workflows, and aggregates computing resources into a pool. This design design results in a high performing, customizable, scalable, and resource-efficient weather analysis framework. 
+\acrfull{dias} \cite{Kawasaki2018DataReduction} is another related system that provides efficient data storage, data quality controls, metadata management, and data sharing. \acrfull{madis} \cite{Macdermaid2005ArchitectureP2.39} enforces a common data format and provides role-based data access. 
+However, \acrshort{dias} and \acrshort{madis} do not support workflows. All these systems are based on monolithic or client-service architectures and are platform dependent. Thus, they cannot gain the performance and economic benefits of contemporary technologies such as cloud computing. Further, these systems are either proprietary or closed source, limiting the wider adoption and customization. For example, it is challenging to customize them for an island like Sri Lanka with different weather patterns.
 
-\acrfull{lead} \cite{Droegemeier2005Service-OrientedWeather} uses the concept of dynamic workflow orchestration and data management in a Web services framework. To predict and analyze weather models by researchers, it requires many resources. Rather than each researcher runs and maintain own computer resources for the weather experiments, the \acrshort{lead} provides a pool of resources. The researchers use the resources pool to run their experiment in shorter amounts of time in higher scale. The \acrshort{lead} follows \acrfull{soa} with different service layers. Also it exposes services through a drag and drop interface to create new workflows. A workflow service in the \acrshort{lead} schedules and run built workflows with promising the maximum use of underline resource pool. \acrfull{dias} \cite{Kawasaki2018DataReduction} and \acrfull{madis} \cite{Macdermaid2005ArchitectureP2.39} provide the functionality of integration and sharing weather data. When compared to other discussed systems, \acrshort{dias} and \acrshort{madis} do not provide the workflow capabilities. The \acrshort{dias} converts data using a inbuilt set of \acrshort{api}s to store data on a large volume of disk space. It also provides some functionalities to quality control the data, and metadata management, and shares the data through a shared API layer. The \acrshort{madis} stores the data after converts into a common data format, and allow role based data access.
-As mentioned above, most systems uses monolithic architecture or client service architecture, platform dependent, and not up to date with cloud computing technologies. Thus users can not benifit from modern cloud platforms and not able to decide the best cost-effective way to host the system. Since most systems are proprietary or closed source, it is difficult to add new requirements and maintain the system in long-term.
+%, they are based on monolithic or client-server architectures. , mare not up to date with the latest technology concepts such as Cloud Computing, not using modern architecture pattern such as microservice architecture was able to provide high scalability and availability, and depend on the software platforms. most of them are proprietary or closed source. For an island like Sri Lanka that having different kinds of weather seasons over the year than that software originated need to be highly customized. Thus it required to get support from the vendor to integrate and configure the system.
 
-\dbc{Reduce previous 3 para into at most 2 paras. Ideally one para.}
-\gkc{Reduce to two paragraphs.}
-\dbc{Need to add a paragraph that clearly highlight the research contribution, its novelty, how we do it, and a sentence or 2 on performance.}
-\gkc{Added new paragraph below.}
+% \db{Several forecasting systems are} developed with considering above factors for disaster management. Deltares developed the The \acrfull{fews}\cite{Werner2013TheSystem} in the Netherland for operational forecasting. It uses a model-centric approach, and implements the forecasting process as a combination of data modeling steps and data transformation algorithms. This framework does not have inherent hydrological modeling capabilities. But it capable of providing capability to create forecast workflows by integrate new models and algorithms. Also it uses a common data-model approach, and only allows models to interact with the system data via using one of the interfaces provided. All the timeseries data store in the common data model. This approach can consider as efficient for data store and access, but it has the inherent performance issues of access data in the database through a single data model. Interestingly, the \acrshort{fews} uses set of unique fields to identify timeseries one from another such as using timeseries's location and data type, as well as an id related to the source of the data. It provides an easy model integration with using the concept of the open modeling framework proposed by Open model integration \cite{Kokkonen2003InterfacingXML}. But the model adapter causes tide couple between models and the execution process of the \acrshort{fews}. This can cause issues when it required to do model unit testing and restrict the flexibility of running the models with parallel execution or external process execution.
 
-Therefore, in this paper, we present a \acrfull{wdias} that is an extendable weather data integration, assimilation, and dissemination system which is capable of handling bulk data efficiently with providing scalability and high throughput. Further it uses open source tools that support modern cloud computing advancements. When compared to other systems' architectures, \acrshort{wdias} uses modern microservice architecture that enables best use of the cloud computing with achieving scalability, high availability with low-cost. Using container orchestration to run the system platform independently with easy setup and maintain the system on different computer resources. Also, the \acrshort{wdias} provides a modular approach to integrate data from different sources, export into different data formats, and the inbuilt extension module system allow users to add new features without any system downtime.
-Using an experimental setup on the cloud, we prrove that \acrshort{wdias} is capable of handling 18,000 requests per minute with different data types, and each request contains 15 minutes interval data per a day. Also, the system is capable of scaling up and shrinking down as per given workload, and capable of running on large range of computer resources such as from few CPUs to few hundred CPUs.
+% \acrfull{lead} \cite{Droegemeier2005Service-OrientedWeather} uses the concept of dynamic workflow orchestration and data management in a Web services framework. To predict and analyze weather models by researchers, it requires many resources. Rather than each researcher runs and maintain own computer resources for the weather experiments, the \acrshort{lead} provides a pool of resources. The researchers use the resources pool to run their experiment in shorter amounts of time in higher scale. The \acrshort{lead} follows \acrfull{soa} with different service layers. Also it exposes services through a drag and drop interface to create new workflows. A workflow service in the \acrshort{lead} schedules and run built workflows with promising the maximum use of underline resource pool. \acrfull{dias} \cite{Kawasaki2018DataReduction} and \acrfull{madis} \cite{Macdermaid2005ArchitectureP2.39} provide the functionality of integration and sharing weather data. When compared to other discussed systems, \acrshort{dias} and \acrshort{madis} do not provide the workflow capabilities. The \acrshort{dias} converts data using a inbuilt set of \acrshort{api}s to store data on a large volume of disk space. It also provides some functionalities to quality control the data, and metadata management, and shares the data through a shared API layer. The \acrshort{madis} stores the data after converts into a common data format, and allow role based data access.
+% As mentioned above, most systems uses monolithic architecture or client service architecture, platform dependent, and not up to date with cloud computing technologies. Thus users can not benefit from modern cloud platforms and not able to decide the best cost-effective way to host the system. Since most systems are proprietary or closed source, it is difficult to add new requirements and maintain the system in long-term.
 
-\db{Rest of the paper is organized as follows:} \cref{pse:background} provides an overview of weather data integration and assimilation systems and architectural decision taken with \acrshort{wdias}. The important components and features of the \acrshort{wdias} discussed in \cref{pse:wdias_architecture}, next \cref{pse:performance_analysis} discusses the test workload performance analysis with comparing with the metrics. 
+In this paper, we present a cloud-based \acrfull{wdias} that supports data integration, assimilation, and dissemination. We designed the proposed system based on the microservices architecture to make it highly scalable, available, modular, and extensible compared to related systems. \acrshort{wdias} can integrate both bulk and timeseries data from different sources, export data into different formats, and add extension modules for custom data transformations and quality controls. The proposed platform further uses container orchestration to simplify application management and gain cost savings through efficient use of cloud computing resources. 
+Using an experimental setup on the cloud and synthetic workload derived from weather use cases, we demonstrate that \acrshort{wdias} can handle 300 requests (with different data types) per second. Also, the system is capable of running on a large range of computing resources ranging from a few CPUs to hundreds of CPUs, as well as show good elasticity against varying workloads.
+
+The rest of the paper is organized as follows: \cref{pse:background} provides an overview of weather data integration and assimilation systems and architectural decisions related to \acrshort{wdias}. The architecture of \acrshort{wdias} is presented in \cref{pse:wdias_architecture}. Performance analysis is presented in \cref{pse:performance_analysis}, while concluding remarks are presented in \cref{pse:summary}.
+\dbc{In papers use Sec. not Section.}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{\db{Background}}
 \label{pse:background}
-\dbc{This section should only provide essential background to weather as most CS readers will not know the domain. No need to discuss about Microservices, AKKA, ESB, etc. By the way, we should not add more than a couple of sentence (or a short para) on AKKA and ESB. We can just tell them we tried that approach and decided not to proceed in that path because of x, y, and z...}
-\gkc{Removed discussion about AKKA, ESB etc. Kept few points on microservices concepts that used.}
 
-\cref{pfi:wdia_components} shows the basic functions of a Weather data integration and assimilation system such as Integration, Assimilation, and Dissemination.
-
+\cref{pfi:wdia_components} shows the basic functions of a weather data integration and assimilation system such as integration, assimilation, and dissemination. A typical system should be capable of integrating multimodal and multidimensional spatial and temporal weather data from diverse sources such as satellites, radars, and high-end and low-end weather stations. In assimilation, the system not only stores the data but also provides them to various weather models in their desired data formats. In the dissemination step, both the captured weather data and processed data from weather models are shared with users and external systems based on their data subscriptions, timeseries metadata and geo-tag based queries, and access rights.
+\dbc{In IEEE template, Figure should be refereed to as Fig.}
+\dbc{Try to minimize colors used for figures. For a paper B and W is the most appropriate. Also, try to align figures and tables to top or bottom of a column.}
+\dbc{This is a good place to add the problem statement.}
 \begin{figure}[htbp]
 \centerline{\includegraphics[width=0.5\textwidth]{method/misc/weather_data_system_components.jpg}}
-\caption{Components of a weather data system.}
+\caption{Components of a weather data integration and assimilation system.}
 \label{pfi:wdia_components}
 \end{figure}
 
-The system should capable of integrating data from different source such as satellite data, high end and low end weather station etc in the form of multidimensional spatial and temporal weather data as shown in the \emph{Integration} modules.
-Then the system should be able to fulfill weather models varying data requirements and should be able to store large set of redundant model data during the \emph{Assimilation} module.
-The users should be able to easy to search into the available that in the system base on timeseries metadata or based on Geo queries, and the \emph{Dissemination} module should be capable of sharing data among different users.
-
-The \acrshort{wdias} is supporting all three modules shown in \cref{pfi:wdia_components}. Through out the design phase of \acrshort{wdias}, we iterate through few architectures with concerning about the scalability and high availability. Initially, we followed \acrfull{soa} with using \acrfull{esb} to integrate different modules. However, we understood that \acrshort{esb} is not suitable for data streaming or bulk data processing and suffers from a single point of failure since it uses a common bus.
+\acrshort{wdias} supports all three modules shown in \cref{pfi:wdia_components}. Through out the design phase of \acrshort{wdias}, we iterate through few architectures with concerning about the scalability and high availability. Initially, we followed \acrfull{soa} with using \acrfull{esb} to integrate different modules. However, we understood that \acrshort{esb} is not suitable for data streaming or bulk data processing and suffers from a single point of failure since it uses a common bus.
 In second design phase, we used the Actor model with AKKA framework with following the microservice architecture such that each microservice is implemented using actors. Microservice architecture is resilient and flexible as one service is independent of another service enables to highly scalable individual services. One of the attractive features of microservice architecture is the independent nature of the microservices which allows to choose different technologies and maintain separately. But using AKKA framework for implement microservice architecture has some disadvantages such as unable to choose independent technologies and the actors messaging between different services cause to result in a too-tight code coupling between the services.
 
 To overcome the issues using AKKA, we moved to the concept of container orchestration based microservice architecture. The \acrshort{wdias} used \acrfull{k8s} as the container orchestration system which is an open-source tool for automating deployment, scaling, and management of containerized applications. Using \acrshort{k8s}, users can add required resources as Nodes to the cluster, and K8s manage and deploy applications as pods into cluster nodes.
@@ -144,9 +142,6 @@ In next \cref{pse:wdias_architecture}, we discussed about the \acrshort{wdias} u
 \label{pfi:microservice_separation}
 \end{figure}
 
-\dbc{What tool did you used to generate these figures. If it support exporting images as PDF, use them with Latex as it gives you a vector image.}
-\gkc{Replaced with PDF images.}
-
 The left side of Figure 3.3 shows the import modules of the WDIAS, and the right side shows the export modules. each import microservice only does the specific task of converting and forwarding the request to the correct data adapter module. each data type, there is an adapter microservice is running which is optimized to storing such type of data. Each adapter has an isolated database, and the database is hosted separately for the high performance.
 And timeseries metadata stored using RDBMS which gives more performance over retrieving metadata data, and cached with the In-Memory database to fast access. The system generates a unique identifier for each timeseries, and throughout the WDIAS, other microservice use it to handle data for fast access. Export module microservice follows the same concepts and provides the capability to export the data into required formats of the weather models.
 
@@ -157,14 +152,11 @@ And timeseries metadata stored using RDBMS which gives more performance over ret
 \end{figure}
 
 As shown in Figure 3.4, when a request with a larger size comes to the system, it stores the data for asynchronously process the data and responds with a unique id that can use to verify whether data processed successfully or not. First it stores the data and publish an event to another service to process it. After successfully process the data by other service, it updates the system status. Also the \acrshort{wdias} provides a simple RESTful API to interact with timeseries metadata and other modules such as import, export and extension modules.
-\dbc{Drop the REST API. No need for a paper. You can briefly mention it.}
-\gkc{Removed}
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Database Structure}
 \label{psubse:wdias_database}
-\dbc{It's odd to start a sub-section after a very-long discussion. So add a sub-section for discussion up to this point.}
-\gkc{Added a sub section above \cref{psubse:wdias_microservices}.}
 
 The foundation of the \acrshort{wdias} is data-centric and build around the timeseries data.
 
@@ -229,9 +221,6 @@ Each extension is considering as a mathematical function which can take \texttt{
 }
 \end{lstlisting}
 
-\dbc{Code examples should be included only if they are novel and essential for discussion. If included, key lines in code need to be explained while referring to line numbers.}
-\gkc{Updated.}
-
 We implemented the system with possible to create multiple triggers for an extension such as Transformation can have two trigger to sample 1 minute data into 5 minutes data and 1 minute data into hourly data. Each extension trigger need to have a unique identifier as shown in Line 2. Then we allowed users to define the extension type (Line 3) and the microservice which is responsible of processing it (Line 4). User can map timeseries into variable and use them as \emph{X} input and \emph{Y} outputs in the \cref{pfi:summary_weather_data_preprocessing} (Line 5-12). Then provide when to trigger the extension with providing optional data as mentioned in the extension implementation.
 
 \emph{Extension Handler} is responsible for triggering the correct Extension with metadata when there is any change on the subscribed extension trigger's \emph{OnChange} timeseries.
@@ -264,8 +253,8 @@ Other than the metadata manipulation API mentioned in \cref{psubse:wdias_microse
 \label{pse:performance_analysis}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Load Testing Plan}
-\label{psubse:test_plan}
+\subsection{Experimental Setup}
+\label{psubse:experimental_setup}
 
 The test plan is to perform load testing on whole system, and analyze the scalability of the system while measuring the operations perform on each module. Two variables can vary while doing performance testing.
 \begin{enumerate}
@@ -276,20 +265,7 @@ The test plan is to perform load testing on whole system, and analyze the scalab
 \acrshort{wdias} is getting a mix of all the data types in the percentages of 70\% scalar, 20\% vector, and 10\% grid values.
 For a given request size the RPS increased in steps such as 600, 3000, 6000, 12000, and 18000 requests per minute. In each step, the RPS holds for a moment to give some time for the system to get stabilized after increasing linearly.
 
-% \begin{figure}[htbp]
-% \centerline{\includegraphics[width=0.5\textwidth]{results/work_load/performance_study_v4.jpg}}
-% \caption{\acrshort{wdias} load testing plan with changing the request size and \acrshort{rps}}
-% \label{pfi:performance_study}
-% \end{figure}
-
-\dbc{Drop pfi-performance-study figure. No need for paper. But explain key details in text.}
-\gkc{Dropped the figure.}
-
 Holding the peak load will help to show whether the system is capable of scaling more than the proposed load testing plan. After the peak, the test case goes through a cool-down period to measure the ability to shrink down the resources when there is not any load on the system. During the test plan, it runs for 30minutes of period with changing the request size form hourly data to 30 minutes data, then 15 minutes data. Then another 30 minutes load test enabling the auto scaling of container orchestration system, and perform 5minutes test run with timeseries queries. The the results are evaluate against the performance metrics of throughput, latency, resource utilization and auto-scaling.
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Experimental Setup}
-\label{psubse:experimental_setup}
 
 During the performance test, it creates 1000 timeseries using the locations are taken from Google's Countries Public Data set \cite{GoogleGoogleCounties}, and uses static 100 Grid locations for store Grid data. Load test perform using  JMeter and used the Distributed Testing feature to generate higher load. It uses the master-slave approach and it allowed to handle all the test cases via single instance, rather handling separate instances. The system is capable of storing any numeric value up to 3 decimal points. It does not make any difference based on the parameter type whether it is the precipitation or the temperature. Thus during the performance testing,  JMeter uses real precipitation data from \acrshort{curw}. One month period of data for five weather stations has been using to prepare the test data.
 
@@ -320,8 +296,6 @@ test & 4 & 10.5 & 5 & 1 & c5n.xlarge \\ \hline
 \end{center}
 \end{table}
 
-\dbc{All numerical values in tables must to right aligned.}
-\gkc{Updated. Fixed the tables.}
 
 To get better performance using the available resources, it is possible to schedule each microservice into a predefined set of nodes. Pods are assigned to the nodes \cref{ptab:aws_eks_nodes} based on the node label as below;
 \begin{itemize}
@@ -335,7 +309,7 @@ To get better performance using the available resources, it is possible to sched
 \subsection{Performance Evaluation}
 \label{psubse:performance_evaluation}
 
-While performing the load testing, each test plan performed around 310k of total sample requests within 30minutes according to the \cref{ptab:obs_all_60_min_summary_throughput} to \cref{ptab:obs_all_15_min_summary_throughput}. The ratio between Scalar and Vector to Grid operations around 71k:8k with the ratio of 90\%:10\%. This implies that test cases were able to perform as planned in the \cref{psubse:test_plan}.
+While performing the load testing, each test plan performed around 310k of total sample requests within 30minutes according to the \cref{ptab:obs_all_60_min_summary_throughput} to \cref{ptab:obs_all_15_min_summary_throughput}. The ratio between Scalar and Vector to Grid operations around 71k:8k with the ratio of 90\%:10\%.
 Other than insert Grid timeseries, other operations succeed with 0\% error rate.
 
 \begin{table}[htbp]
@@ -483,8 +457,6 @@ The \acrshort{wdias} supports \emph{auto scaling} by out of the box with \acrsho
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Discussion}
 \label{psubse:discussion}
-\dbc{Make this the discussion and a sub-section of Sec. 4}
-\gkc{Renamed. I did not get what did you mean by sub section 4. Did you mean \cref{pse:summary}?}
 
 As we showed that the \acrshort{wdias} can perform better, there are some improvements that can add to improve the performance and usability of the system.
 
@@ -496,15 +468,12 @@ Improve the \emph{Grid data performance} by porting \acrshort{netCDF} C or FORTR
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Summary}
 \label{pse:summary}
-\dbc{Summary is too long. Should not be more than a single para}
-\gkc{Just kept the important sections}
-\dbc{Summary should not be more than a single para for a paper.}
-\gkc{Reduce to one paragraph with removing some info.}
 
 In this paper, we present an extendable open source weather data integration and assimilation system to overcome the issues in existing systems. Most systems are proprietary or closed source, based on client-server architectures or monolithic distributed system architectures, and depend on computer platforms unable to use could computing to gain benefits of scalability, high availability and low-cost operations. The proposed system uses modern microservice architecture pattern and cloud computing tools such as container orchestration to gain high scalability and availability. Based on the nature of the weather metadata, the \acrshort{wdias} used a database structure to provide higher performance while storing the weather data optimum. \acrshort{wdias} uses many microservice architecture concepts to create stateless, failover, and redundant microservice with providing a generic open mechanism to integrate new modules as an extension to enhance the features of the system and weather data preprocessing. Further, the system provides an extension API to easy access to create and modify the extension triggers on the fly and support complex timeseries metadata queries with Geo-based support.
 We used an experimental \acrshort{k8s} setup on Cloud infrastructure for the performance analysis, and the \acrshort{wdias} able to handle 18,000 requests per minute successfully with minimizing the error rate to zero. Also, we repeated the test cases while increasing the request size. The system handled increasing workload same while keeping the latency constant without any significant change and able increase the throughput. With referring to above facts, it shows the scalability of the \acrshort{wdias} system.
 Using \acrshort{k8s} auto-scaling, the system were able to elastically adjust the number of pods to handle the workload and shows that the system can run from few CPU node to nodes with a few hundred CPUs.
 
+\dbc{Reduce Summary by 50\%}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Acknowledgment}
 \label{pse:ack}
@@ -514,8 +483,6 @@ This research is supported in part by the grant from the Center for Urban Water,
 \graphicspath{ {./images/} }
 \input{glossary.tex}
 \printbibliography[title={References}]
-\dbc{References must be in IEEE standard. Some are not quite formatted for IEEE standard. For e.g., some of the paper and conference titles are in upper case.}
-\gkc{I got your point. But I used this IEEE template: https://www.overleaf.com/latex/templates/ieee-conference-template-example/nsncsyjfmpxy. Not sure how to fix it. May be need to edit the Class implementation above.}
-\gkc{Updated. Mendeley has imported them in Upper case. Still is there any issue?}
 
+\dbc{Still these references are not quite IEEE style. I fixed some of the references in your bib file. Also, I have had issues with IEEE template in Overleaf.}
 \end{document}
