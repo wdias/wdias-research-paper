@@ -1,12 +1,15 @@
 \documentclass[conference]{IEEEtran}
 \IEEEoverridecommandlockouts
 % The preceding line is only needed to identify funding in the first footnote. If that is unneeded, please comment it out.
+
 \usepackage[acronym]{glossaries}
+%\usepackage{cite}
 \usepackage{amsmath,amssymb,amsfonts}
 \usepackage{algorithmic}
 \usepackage{graphicx}
 \usepackage{textcomp}
 \usepackage{xcolor}
+
 \usepackage{listings}
 \usepackage{biblatex}
 \usepackage{adjustbox}
@@ -18,7 +21,10 @@
 \newcommand{\gkc}[1]{\todo[author=Gihan, inline, color=green!50]{#1}}
 
 \usepackage{hyperref}
-\usepackage[noabbrev,capitalise]{cleveref}
+\usepackage{cleveref}
+
+\crefformat{section}{#2Sec.~#1#3}
+\crefformat{figure}{#2Fig.~#1#3}
 
 \addbibresource{mendeley.bib}
 
@@ -42,9 +48,10 @@
 
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+    
 \begin{document}
 
-\title{WDIAS : A Microservices-Based Weather Data Integration and Assimilation System\\
+\title{WDIAS: A Microservices-Based Weather Data Integration and Assimilation System\\
 }
 
 \author{\IEEEauthorblockN{Gihan Karunarathne}
@@ -102,56 +109,63 @@ However, \acrshort{dias} and \acrshort{madis} do not support workflows. All thes
 In this paper, we present a cloud-based \acrfull{wdias} that supports data integration, assimilation, and dissemination. We designed the proposed system based on the microservices architecture to make it highly scalable, available, modular, and extensible compared to related systems. \acrshort{wdias} can integrate both bulk and timeseries data from different sources, export data into different formats, and add extension modules for custom data transformations and quality controls. The proposed platform further uses container orchestration to simplify application management and gain cost savings through efficient use of cloud computing resources. 
 Using an experimental setup on the cloud and synthetic workload derived from weather use cases, we demonstrate that \acrshort{wdias} can handle 300 requests (with different data types) per second. Also, the system is capable of running on a large range of computing resources ranging from a few CPUs to hundreds of CPUs, as well as show good elasticity against varying workloads.
 
-The rest of the paper is organized as follows: \cref{pse:background} provides an overview of weather data integration and assimilation systems and architectural decisions related to \acrshort{wdias}. The architecture of \acrshort{wdias} is presented in \cref{pse:wdias_architecture}. Performance analysis is presented in \cref{pse:performance_analysis}, while concluding remarks are presented in \cref{pse:summary}.
-\dbc{In papers use Sec. not Section.}
+The rest of the paper is organized as follows: %\cref{pse:background} provides an overview of weather data integration and assimilation systems and architectural decisions related to \acrshort{wdias}. 
+The architecture of \acrshort{wdias} is presented in \cref{pse:wdias_architecture}. In \cref{pse:performance_analysis} we presente the performance analysis. concluding remarks are presented in \cref{pse:summary}.
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{\db{Background}}
-\label{pse:background}
+%\section{Background}
+%\label{pse:background}
 
-\cref{pfi:wdia_components} shows the basic functions of a weather data integration and assimilation system such as integration, assimilation, and dissemination. A typical system should be capable of integrating multimodal and multidimensional spatial and temporal weather data from diverse sources such as satellites, radars, and high-end and low-end weather stations. In assimilation, the system not only stores the data but also provides them to various weather models in their desired data formats. In the dissemination step, both the captured weather data and processed data from weather models are shared with users and external systems based on their data subscriptions, timeseries metadata and geo-tag based queries, and access rights.
-\dbc{In IEEE template, Figure should be refereed to as Fig.}
-\dbc{Try to minimize colors used for figures. For a paper B and W is the most appropriate. Also, try to align figures and tables to top or bottom of a column.}
-\dbc{This is a good place to add the problem statement.}
-\begin{figure}[htbp]
+\begin{figure}[tb!]
 \centerline{\includegraphics[width=0.5\textwidth]{method/misc/weather_data_system_components.jpg}}
 \caption{Components of a weather data integration and assimilation system.}
 \label{pfi:wdia_components}
 \end{figure}
 
-\acrshort{wdias} supports all three modules shown in \cref{pfi:wdia_components}. Through out the design phase of \acrshort{wdias}, we iterate through few architectures with concerning about the scalability and high availability. Initially, we followed \acrfull{soa} with using \acrfull{esb} to integrate different modules. However, we understood that \acrshort{esb} is not suitable for data streaming or bulk data processing and suffers from a single point of failure since it uses a common bus.
-In second design phase, we used the Actor model with AKKA framework with following the microservice architecture such that each microservice is implemented using actors. Microservice architecture is resilient and flexible as one service is independent of another service enables to highly scalable individual services. One of the attractive features of microservice architecture is the independent nature of the microservices which allows to choose different technologies and maintain separately. But using AKKA framework for implement microservice architecture has some disadvantages such as unable to choose independent technologies and the actors messaging between different services cause to result in a too-tight code coupling between the services.
+\dbc{Try to minimize colors used for figures. For a paper B and W is the most appropriate.}
 
-To overcome the issues using AKKA, we moved to the concept of container orchestration based microservice architecture. The \acrshort{wdias} used \acrfull{k8s} as the container orchestration system which is an open-source tool for automating deployment, scaling, and management of containerized applications. Using \acrshort{k8s}, users can add required resources as Nodes to the cluster, and K8s manage and deploy applications as pods into cluster nodes.
-In next \cref{pse:wdias_architecture}, we discussed about the \acrshort{wdias} used microservice concepts such as implement microservice as dumb pipes rather implementing smart endpoints, uses database per service with access via API only, distributed Transactions over microservices using event processing, and considering distributed systems scalability in directions of X-axis scaling, Y-axis scaling and Z-axis scaling.
+%\acrshort{wdias} supports all three modules shown in \cref{pfi:wdia_components}. While designing \acrshort{wdias}, we iterate through a few architectural designs to achieve high scalability and availability. Initially, we followed the \acrshort{soa} while using an \acrfull{esb} to integrate different modules. However, it turned out that we understood that \acrshort{esb} is not suitable for data streaming or bulk data processing and suffers from a single point of failure since it uses a common bus.
+%In second design phase, we used the Actor model with AKKA framework with following the microservice architecture such that each microservice is implemented using actors. Microservice architecture is resilient and flexible as one service is independent of another service enables to highly scalable individual services. One of the attractive features of microservice architecture is the independent nature of the microservices which allows to choose different technologies and maintain separately. But using AKKA framework for implement microservice architecture has some disadvantages such as unable to choose independent technologies and the actors messaging between different services cause to result in a too-tight code coupling between the services.
+
+%To overcome the issues using AKKA, we moved to the concept of container orchestration based microservice architecture. The \acrshort{wdias} used \acrfull{k8s} as the container orchestration system which is an open-source tool for automating deployment, scaling, and management of containerized applications. Using \acrshort{k8s}, users can add required resources as Nodes to the cluster, and K8s manage and deploy applications as pods into cluster nodes.
+%In next \cref{pse:wdias_architecture}, we discussed about the \acrshort{wdias} used microservice concepts such as implement microservice as dumb pipes rather implementing smart endpoints, uses database per service with access via API only, distributed Transactions over microservices using event processing, and considering distributed systems scalability in directions of X-axis scaling, Y-axis scaling and Z-axis scaling.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{\db{Proposed Architecture}}
-%\section{Weather Data Integration and Assimilation System Architecture}
+\section{Proposed Architecture}
 \label{pse:wdias_architecture}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{WDIAS Microservice Architecture}
 \label{psubse:wdias_microservices}
 
-\cref{pfi:microservice_separation} shows the clear separation of microservices into the modules of the \acrshort{wdias}. As seen in Figure of \cref{pfi:microservice_separation} and \cref{pfi:microservice_architecture_async} each circle represents a microservice in the \acrshort{wdias}, and those are implemented as containerized applications. 
+\cref{pfi:wdia_components} shows the basic functions of a weather data integration and assimilation system such as integration, assimilation, and dissemination. A typical system should be capable of integrating multimodal and multidimensional spatial and temporal weather data from diverse sources such as satellites, radars, and high-end and low-end weather stations. In assimilation, the system not only stores the data but also provides them to various weather models in their desired data formats. In the dissemination step, both the captured weather data and processed data from weather models are shared with users and external systems based on their data subscriptions, timeseries metadata and geo-tag based queries, and access rights. \acrshort{wdias} supports all three of these modules.
 
-\begin{figure}[htbp]
+%While designing \acrshort{wdias}, we iterated through a few architectural designs to achieve high scalability and availability. Initially, we followed the \acrshort{soa} while using an \acrfull{esb} to integrate different modules. However, it turned out that \acrshort{esb} is not suitable for data streaming and bulk data processing, as well as suffered from a single point of failure as it uses a common bus. We also attempted the Actor model with AKKA framework where each microservice was implemented using an actor. Microservice architectures were chosen as they are resilient, flexible, and scalable, as services were independent of each otehr. However, actors messaging between different services resulted in tight code coupling between the services and the platform was over dependent on the AKKA framework.
+%To overcome these issues, we moved to container orchestration based microservices architecture.  
+%The \acrshort{wdias} used \acrfull{k8s} as the container orchestration system which is an open-source tool for automating deployment, scaling, and management of containerized applications. Using \acrshort{k8s}, users can add required resources as Nodes to the cluster, and K8s manage and deploy applications as pods into cluster nodes.
+%In next \cref{pse:wdias_architecture}, we discussed about the \acrshort{wdias} used microservice concepts such as implement microservice as dumb pipes rather implementing smart endpoints, uses database per service with access via API only, distributed Transactions over microservices using event processing, and considering distributed systems scalability in directions of X-axis scaling, Y-axis scaling and Z-axis scaling.
+
+\db{...<add a sentence of 2 on what we selected microservices and containers>...} \cref{pfi:microservice_separation} shows the \db{separation of microservices into the modules} of the \acrshort{wdias}. As seen in Figures of \cref{pfi:microservice_separation} and \cref{pfi:microservice_architecture_async} each circle represents a microservice in the \acrshort{wdias}, and those are implemented as containerized applications. 
+\dbc{add a sentence or 2 on what we selected microservices and s where I have arked within ...<...>.... In the interest of page limit I remove entire discussion on SOA, KSB, and AKK. If it's essential to discuss about k8s, mention that in one of the subsections.}
+\dbc{''separation of microservices into the modules'' or ''separation modules in to of microservices''?}
+
+\begin{figure}[b!]
 \centerline{\includegraphics[width=0.5\textwidth]{method/microservice/separation_microservices-v4.pdf}}
 \caption{Separation of \acrshort{wdias} microservices.}
 \label{pfi:microservice_separation}
 \end{figure}
 
-The left side of Figure 3.3 shows the import modules of the WDIAS, and the right side shows the export modules. each import microservice only does the specific task of converting and forwarding the request to the correct data adapter module. each data type, there is an adapter microservice is running which is optimized to storing such type of data. Each adapter has an isolated database, and the database is hosted separately for the high performance.
+The left side of \cref{pfi:microservice_separation} shows the import modules of the WDIAS, and the right side shows the export modules. each import microservice only does the specific task of converting and forwarding the request to the correct data adapter module. each data type, there is an adapter microservice is running which is optimized to storing such type of data. Each adapter has an isolated database, and the database is hosted separately for the high performance.
 And timeseries metadata stored using RDBMS which gives more performance over retrieving metadata data, and cached with the In-Memory database to fast access. The system generates a unique identifier for each timeseries, and throughout the WDIAS, other microservice use it to handle data for fast access. Export module microservice follows the same concepts and provides the capability to export the data into required formats of the weather models.
 
-\begin{figure}[htbp]
+\begin{figure}[t!]
 \centerline{\includegraphics[width=0.5\textwidth]{method/microservice/microservice_architecture-handle_on_async-v4.pdf}}
 \caption{microservice architecture - handle asynchronously.}
 \label{pfi:microservice_architecture_async}
 \end{figure}
 
-As shown in Figure 3.4, when a request with a larger size comes to the system, it stores the data for asynchronously process the data and responds with a unique id that can use to verify whether data processed successfully or not. First it stores the data and publish an event to another service to process it. After successfully process the data by other service, it updates the system status. Also the \acrshort{wdias} provides a simple RESTful API to interact with timeseries metadata and other modules such as import, export and extension modules.
+As shown in \cref{pfi:microservice_architecture_async}, when a request with a larger size comes to the system, it stores the data for asynchronously process the data and responds with a unique id that can use to verify whether data processed successfully or not. First it stores the data and publish an event to another service to process it. After successfully process the data by other service, it updates the system status. Also the \acrshort{wdias} provides a simple RESTful API to interact with timeseries metadata and other modules such as import, export and extension modules.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -175,7 +189,7 @@ Following list is the timeseries metadata which can use to uniquely identify one
 
 Scalar data point only consist of a single value. And Vector data point consists of two values such as magnitude and the direction of the Vector. But for Grid data, a point can consist of multiple values. To get the advantage of storing data efficiently, we can use a set of different databases based on the advantage of using them for each valueType. To support search queries with lower latency, it required to use indexing for the fast search for timeseries metadata. Further, Geo-based indexing is required to support Geo-based search queries based on the locations. Above capabilities achieved by using a database structure with compose of multiple databases as shown in \cref{pfi:database_structure}.
 
-\begin{figure}[htbp]
+\begin{figure}[t!]
 \centerline{\includegraphics[width=0.4\textwidth]{method/microservice/wdias_database_structure.pdf}}
 \caption{\acrshort{wdias} database structure.}
 \label{pfi:database_structure}
@@ -189,7 +203,7 @@ Since metadata consists of multiple key attributes, the data can be efficiently 
 
 The \acrshort{wdias} provides the data preprocessing capabilities via extension modules with a simple generic mathematical function model.
 
-\begin{figure}[htbp]
+\begin{figure}[t!]
 \centerline{\includegraphics[width=0.4\textwidth]{method/data_preprocess/summary_weather_data_preprocessing.jpg}}
 \caption{Generic functional approach to weather data preprocessing.}
 \label{pfi:summary_weather_data_preprocessing}
@@ -279,7 +293,7 @@ with Throughput Shaping Timer because it supports the open workload approach.
 
 \acrshort{wdias} is using the \acrfull{k8s} as the container orchestration system which is an open-source system for automating deployment, scaling, and management of containerized applications. They are many \acrshort{k8s} solutions available as a cloud service, we used \acrfull{eks} based on the availability. \cref{ptab:aws_eks_nodes} shows the list of nodes/computers used during the performance test.
 
-\begin{table}[htbp]
+\begin{table}[tb!]
 \caption{\acrshort{eks} nodes}
 \begin{center}
 \begin{adjustbox}{width=0.45\textwidth}
@@ -312,7 +326,7 @@ To get better performance using the available resources, it is possible to sched
 While performing the load testing, each test plan performed around 310k of total sample requests within 30minutes according to the \cref{ptab:obs_all_60_min_summary_throughput} to \cref{ptab:obs_all_15_min_summary_throughput}. The ratio between Scalar and Vector to Grid operations around 71k:8k with the ratio of 90\%:10\%.
 Other than insert Grid timeseries, other operations succeed with 0\% error rate.
 
-\begin{table}[htbp]
+\begin{table}[tb!]
 \centering
 \caption{Throughput and Latency of load testing with 60min data}
 \begin{adjustbox}{width=0.45\textwidth}
@@ -335,7 +349,7 @@ Query: Location & 71804 & 3 & 3 & 1.52 & 0.00\% & 40.5 \\ \hline
 The average latency of inserting Scalar and Vector timeseries data increased by 1ms when the request size increased. But for the 90\% percentile of insertions increased from 31ms to 41ms. But the standard deviation kept same. \acrshort{wdias} were able to perform with the same throughput of 40.5 \acrshort{rps} without significant change in latency which shows the scalability of the system.
 While retrieving the Scalar and Vector timeseries data, the system was able to respond with in 10ms for 60minutes and 30minutes data with lesser standard deviation. But the latency got double when handling the 15minutes data. This caused by heavy writes on the timeseries database.
 
-\begin{table}[htbp]
+\begin{table}[tb!]
 \caption{ Throughput and Latency of load testing with 30min data}
 \begin{center}
 \begin{adjustbox}{width=0.45\textwidth}
@@ -359,7 +373,7 @@ TOTAL & 310878 & 129 & 0 & 207.10 & 0.00\% & 175.3 \\ \hline
 When inserting the Grid timeseries data, the average latency was less than the insert Scalar or Vector data, because of the Grid data handle asynchronously. When the number of Grid files doubled, each time the latency also got doubled. Notably, the \acrshort{wdias} was able to perform with same throughput with lesser standard deviation. Also, for each test case the system was able to kept the same latency throughout test run without any significant change. This also show the scalability of the Grid data in the \acrshort{wdias}.
 Retrieving of Grid timeseries data happens on demand during the load test. But it is possible to upgrade the system to support asynchronously download alongside with direct download. Because of that, the latency of download the the Grid data is bit higher than the other test cases. In that case also, the \acrshort{wdias} perform with keeping the same throughput with lower standard deviation which shows the scalability of the export Grid data module.
 
-\begin{table}[htbp]
+\begin{table}[tb!]
 \caption{ Throughput and Latency of load testing with 15min data}
 \begin{center}
 \begin{adjustbox}{width=0.45\textwidth}
@@ -383,7 +397,7 @@ Query: Location & 71749 & 3 & 4 & 2.32 & 0.00\% & 40.5 \\ \hline
 Throughout all test plans, the \acrshort{wdias} system performed better on serving the search queries based locations for Scalar and Vector timeseries. This is due to using indexing for server such queries. The \acrshort{wdias} was able to respond with 3ms most of the cases with keeping lower standard deviation.
 % To get better performance test on the query module, we performed set of complex queries as shown in the \cref{ptab}
 
-\begin{table}[htbp]
+\begin{table}[tb!]
 \caption{Throughput and Latency of load testing with 15min data while enabled K8s auto-scaling}
 \begin{center}
 \begin{adjustbox}{width=0.45\textwidth}
@@ -407,15 +421,15 @@ Query: Location & 71704 & 1 & 2 & 2.05 & 0.00\% & 40.5 \\ \hline
 \cref{ptab:obs_all_auto_15_min_summary_throughput} shows the \acrshort{wdias} performance with 15minutes data, but enabled auto-scaling. During above test cases, most resource utilized module was importing Grid data.
 The observations are almost similar to \cref{ptab:obs_all_15_min_summary_throughput}, but notably the error rate of insert Grid timeseries got reduced after enabled the auto-scaling for import Grid data module. Also the standard deviation for handling Grid data reduced which means system was able to perform more better than the previous test plan.
 
-\begin{figure}[htbp]
+\begin{figure}[b!]
 \centerline{\includegraphics[width=0.5\textwidth]{results/obs/all_auto/obs_all_auto_15m_res_latencies_against_hits.png}}
-\caption{Performance test 15min data enabled auto-scaling - response latencies against server hits over the elapsed time.}
+\caption{Performance test 15-min data enabled auto-scaling - response latencies against server hits over the elapsed time.}
 \label{pfi:test_obs_auto_all_15_min_latency_vs_hits}
 \end{figure}
 
 \cref{pfi:test_obs_auto_all_15_min_latency_vs_hits} shows the latency of each test case throughout total time of load testing with 15minutes data while enabled auto-scaling. As the Figure clearly shows while increasing the number of server hits for each test case, the system kept the latency constant without significant change. At the peak time, handling Grid data has some disturbances and inserting Scalar and Vector data has some random spikes in the latencies.
 
-\begin{figure}[htbp]
+\begin{figure}[t!]
 \centerline{\includegraphics[width=0.5\textwidth]{results/obs/all_auto/obs_all_auto_15m_transaction_throughtput_vs_threads.png}}
 \caption{Performance test 15min data enabled auto-scaling - transnational throughput vs number of active threads.}
 \label{pfi:test_obs_auto_all_15_min_throughput_vs_threads}
@@ -425,12 +439,14 @@ The observations are almost similar to \cref{ptab:obs_all_15_min_summary_through
 The formula for total server transaction throughput is \(<active threads> * 1 second / <1  thread response time>\) \cite{JMeterPluginsTransactionPlugin}. It shows the statistical maximum possible number of transactions based on the number of users accessing the application.
 By combining the \cref{pfi:test_obs_auto_all_15_min_latency_vs_hits}, this graph shows that the throughput of the system gets increased without much change in the latency, thus it proves the scalability of the \acrshort{wdias}.
 
-\begin{figure}[htp]
+\begin{figure}[tb!]
     \centering
     \includegraphics[width=0.5\textwidth]{results/obs/all_auto/obs_all_auto_15m_import_grid_pod.png}
     \caption{Load testing with auto-scaling import ascii grid number of pods over time.}
     \label{pfi:obs_all_auto_15m_import_grid_pod}
 \end{figure}
+
+\dbc{Some of the figure captions are not very clear.}
 
 \cref{pfi:obs_all_auto_15m_import_grid_pod} shows the number of import-ascii-grid-upload pods scheduled overtime. The auto-scaling enabled with the configurations of 1 to 10 pods with the recommended CPU usage with 80\%. And the pods scheduled with 1 CPU requested, and limit with 2 CPUs per pod.
 As the graph shows, 3 pods scheduled at the initial as per the configuration of the helm chart. While increasing the workload, new pods get spawn while keeping the constraint of 80\% of recommended CPU utilization. After \acrshort{k8s} spawn 10 maximum pods, it stops spawning new pods. But the pods were able to perform with vertical scaling since those are not hit the CPU limit of 2.
@@ -469,7 +485,7 @@ Improve the \emph{Grid data performance} by porting \acrshort{netCDF} C or FORTR
 \section{Summary}
 \label{pse:summary}
 
-In this paper, we present an extendable open source weather data integration and assimilation system to overcome the issues in existing systems. Most systems are proprietary or closed source, based on client-server architectures or monolithic distributed system architectures, and depend on computer platforms unable to use could computing to gain benefits of scalability, high availability and low-cost operations. The proposed system uses modern microservice architecture pattern and cloud computing tools such as container orchestration to gain high scalability and availability. Based on the nature of the weather metadata, the \acrshort{wdias} used a database structure to provide higher performance while storing the weather data optimum. \acrshort{wdias} uses many microservice architecture concepts to create stateless, failover, and redundant microservice with providing a generic open mechanism to integrate new modules as an extension to enhance the features of the system and weather data preprocessing. Further, the system provides an extension API to easy access to create and modify the extension triggers on the fly and support complex timeseries metadata queries with Geo-based support.
+In this paper, we present an extendable open source weather data integration and assimilation system to overcome the issues in existing systems. Most systems are proprietary or closed source, based on client-server architectures or monolithic distribute architectures. The proposed system uses modern microservice architecture pattern and container orchestration to gain high scalability and availability. The \acrshort{wdias} used a database structure to store weather data optimum with high performance access. With microservice architecture, it creates stateless, failover, and redundant microservice, and provide a generic open model approach to integrate new modules as an extension. Further, the system provides an extension API to easy access to create and modify the extension triggers on the fly and support complex timeseries metadata queries with Geo-based support.
 We used an experimental \acrshort{k8s} setup on Cloud infrastructure for the performance analysis, and the \acrshort{wdias} able to handle 18,000 requests per minute successfully with minimizing the error rate to zero. Also, we repeated the test cases while increasing the request size. The system handled increasing workload same while keeping the latency constant without any significant change and able increase the throughput. With referring to above facts, it shows the scalability of the \acrshort{wdias} system.
 Using \acrshort{k8s} auto-scaling, the system were able to elastically adjust the number of pods to handle the workload and shows that the system can run from few CPU node to nodes with a few hundred CPUs.
 
@@ -485,4 +501,6 @@ This research is supported in part by the grant from the Center for Urban Water,
 \printbibliography[title={References}]
 
 \dbc{Still these references are not quite IEEE style. I fixed some of the references in your bib file. Also, I have had issues with IEEE template in Overleaf.}
+\gkc{It is same as the class mentioned here: https://www.ieee.org/conferences/publishing/templates.html. I think, we have to add correct data in the bib to get it working. Previously, some reference showed with Capitals due to mendeley add the text as Capital rather Title case.}
+
 \end{document}
