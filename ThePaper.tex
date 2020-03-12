@@ -26,6 +26,7 @@
 
 \crefformat{section}{#2Sec.~#1#3}
 \crefformat{figure}{#2Fig.~#1#3}
+\crefformat{table}{#2Table~#1#3}
 
 % \addbibresource{mendeley.bib}
 
@@ -278,6 +279,8 @@ Other than the metadata manipulation API mentioned in \cref{psubse:wdias_microse
 %     }
 % \end{lstlisting}
 
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Performance Analysis}
 \label{pse:performance_analysis}
@@ -293,28 +296,36 @@ Other than the metadata manipulation API mentioned in \cref{psubse:wdias_microse
 %\end{enumerate}
 
 As a weather data integration and assimilation system is expected to handle variety of data sources and types, we created a synthetic workload consisting of 70\% scalar, 20\% vector, and 10\% grid values. 
-We created 1,000 timeseries using 30-day traces from five weather stations of \acrlong{curw}. Locations of timeseries were set based on the Google's Countries dataset \cite{GoogleGoogleCounties}. For grid data we considered a grid size of 100. 
+We created 1,000 timeseries using 30-day traces from five weather stations of \acrlong{curw}. Locations of timeseries were set based on the Google's Countries dataset with 250 locations \cite{GoogleGoogleCounties}. \gk{Then define four timeseries per each location by varying source of data (\textit{Module ID}) to create 1,000 timeseries. During the the load testing, we send weather data for 1 day in one request, and use a date counter to keep track of the day. For each day, scalar timeseries randomly pick precipitation from one of five weather stations. After date counter passed 30 days, then point back to the first date of 30-day traces. Same way, scalar timeseries randomly pick wind (wind speed and direction) data from one of five weather stations.}. For grid data we considered a grid size of 120 rows and 139 columns 2D regular grid. \gk{We create 100 grid timeseries using 30-day traces from simulated ASCII Grid file outputs of water levels}.
 \dbc{Clearly mention what weather attributes we used and how we build a 1000 timeseries using only 5 weather stations. This should also cover how vector and grid values were generated.}
 \dbc{When referring to tables T should be capital}
+\gkc{fixed}
 
-Load testing was performed using Apache JMeter with distributed testing feature, which use multiple workload generators to create a high throughput workload. We vary the request size by varying the resolution of data expected from the system, e.g., we requested aggregated data for an hour, 30 minutes, and 15 minutes. For a given request size, we issued requests at different rates such as 10, 50, 100, 200, and 600 requests per second. For a given combination of request size and rate, we tested the system for 30 minutes. We then moved to a more demanding combination of request size and rate to measure effectiveness of auto scaling of the container orchestration system. After reaching the highest request size and rate combination, we also measured how the system will gradually release the resources when there is not load on the system. 
+Load testing was performed using Apache JMeter with distributed testing feature, which use multiple workload generators to create a high throughput workload. \gk{We vary the request size by varying the number of data points available per request, e.g., we requested collected data with hourly interval per a day, 30 minute interval data per a day, and 15 minute interval data per a day}. For a given request size, we issued requests at different rates such as 10, 50, 100, 200, and 300 requests per second. \gk{Fixing the request size per load test, we tested the system for 30 minutes with varying the rate over time. And repeat same load testing step again with changing the request size once, and varying the rate over time. We then we repeat same load test with 15 minutes interval request size data} to measure effectiveness of auto scaling of the container orchestration system. After reaching the highest request rate, we also measured how the system will gradually release the resources when there is not load on the system. 
 \dbc{What's a request here, ingest or export? While I see Insert, Retrieve, Query in tables, we are not clearly explaining them here.}
 \dbc{Given that we had a mix of 70 : 20 : 10 requests what's mean by request size is not quite clear (I updated above sentence, but still feel like we are not clearly explaining it)?}
-\dbc{After modifying I ended up this part of sentence ``and perform 5minutes test run with timeseries queries.'' which I was not clear how to edit} 
+\gkc{sir, the request size is number of data points send in a single request. In load testing, we send data after collecting for one day of period.}
+\dbc{After modifying I ended up this part of sentence ``and perform 5minutes test run with timeseries queries.'' which I was not clear how to edit}
+\gkc{This is about testing the query module separately. But I removed that part in this paper.}
 \dbc{Be clear that aggregation of 1H, 30min, and 15min was done only for Retrieve requests.}
+\gkc{As per the test plan I used, I send data as a collect of data per a day. Not sure the way I used is not clear.}
 
-\acrshort{wdias} was deployed using \acrfull{eks} container orchestration platform. \cref{ptab:aws_eks_nodes} shows the list of nodes used in the experimental setup. \db{\emph{Core} node executed metadata, extensions, query, status and extension microservices. Whereas the \emph{grid} node executed the grid adapter, as well as grid data import and export services. Scalar and vector adapters, as well as scalar and vector import and export services were deployed on the \emph{scalar} node. JMeter and metric server executed on the \emph{test} node.} Given a set of computing resources, to get the better performance, we scheduled each microservice on a predefined set of nodes.
+% \acrshort{wdias} was deployed using \acrfull{eks} container orchestration platform. \cref{ptab:aws_eks_nodes} shows the list of nodes used in the experimental setup. \db{\emph{Core} node executed metadata, extensions, query, status and extension microservices. Whereas the \emph{grid} node executed the grid adapter, as well as grid data import and export services. Scalar and vector adapters, as well as scalar and vector import and export services were deployed on the \emph{scalar} node. JMeter and metric server executed on the \emph{test} node.} Given a set of computing resources, to get the better performance, we scheduled each microservice on a predefined set of nodes.
+\acrshort{wdias} was deployed using \acrfull{eks} container orchestration platform. \cref{ptab:aws_eks_nodes} shows the list of nodes used in the experimental setup. The metadata, extensions, query, status and extension microservices scheduled to host on the core labeled node. The grid adapter, as well as grid data import and export microservices scheduled to host on grid labeled node due to those services are closely communicating to each other. Scalar and vector adapters, as well as scalar and vector import and export services were deployed on the scalar labeled node due to closely communication. Then JMeter test servers hosted on test labeled nodes separately, since those want high network usage to connect with the \acrshort{wdias} system.
 \dbc{Some of the terms in highlighted part was never mentioned in text. Hence, it's important that these are introduced in Sec. II.A}
+\gkc{Reworded}
 
-\db{WDIAS, uses the Concurrency Thread Group with Throughput Shaping Timer because it supports the open workload approach.}
+% \db{WDIAS, uses the Concurrency Thread Group with Throughput Shaping Timer because it supports the open workload approach.}
 \dbc{Highlighted sentence is not clear to me.}
 
-\begin{itemize}
-    \item \emph{closed system model} \cite{Haggett1998AnWales} -- a new request is only triggered by the completion of a previous request, following by a think time.
-    \item \emph{open system model} -- new requests arrival independently of completions.
-\end{itemize}
+% \begin{itemize}
+%     \item \emph{closed system model} \cite{Haggett1998AnWales} -- a new request is only triggered by the completion of a previous request, following by a think time.
+%     \item \emph{open system model} -- new requests arrival independently of completions.
+% \end{itemize}
 \dbc{What are these?}
+\gkc{I need too much details. No need for the paper I think.}
 
+\gk{}
 \dbc{From Table II to V it seems we separated out timeseries and grid requests. Also, there are Insert, Retrieve, and query requests. These need to be clearly mentioned in this sub-section to avoid any confusion.}
 
 \begin{table}[tb!]
@@ -323,7 +334,7 @@ Load testing was performed using Apache JMeter with distributed testing feature,
 \begin{adjustbox}{width=0.45\textwidth}
 \begin{tabular}{|l|r|r|r|r|l|}
 \hline
-\textbf{Node} & \textbf{vCPUs} & \textbf{RAM (GB)} & \textbf{Storage (GB)} & \textbf{Quantity} & \textbf{EC2 Name} \\ \hline
+\textbf{Node Label} & \textbf{vCPUs} & \textbf{RAM (GB)} & \textbf{Storage (GB)} & \textbf{Quantity} & \textbf{EC2 Name} \\ \hline
 core & 16 & 32 & 15 & 1 & c5.4xlarge \\ \hline
 grid & 8 & 16 & 25 & 1 & c5.2xlarge \\ \hline
 scalar & 8 & 16 & 20 & 1 & c5.2xlarge \\ \hline
@@ -335,7 +346,6 @@ test & 4 & 10.5 & 5 & 1 & c5n.xlarge \\ \hline
 \end{table}
 
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Performance Evaluation}
 \label{psubse:performance_evaluation}
@@ -343,11 +353,14 @@ test & 4 & 10.5 & 5 & 1 & c5n.xlarge \\ \hline
 \cref{ptab:obs_all_60_min_summary_throughput} to \cref{ptab:obs_all_15_min_summary_throughput} show the throughput (measured as \acrlong{rps}), latency, and errors under three different data resolutions with a fixed service setup. Whereas \cref{ptab:obs_all_auto_15_min_summary_throughput} shows the performance with the container auto-scaling. It can be seen that each test resulted in approximately 310K requests within 30 minutes. Avg., 90\%, and STD indicates the average, standard deviation, and 90\% percentile for latency.  Other than some grid timeseries inserts, all other operations succeed with no errors.
 
 \dbc{What's the request rate when collecting data for Tables II to V?}
+\gkc{I removed the graph based on your suggestion: performance\_study\_v4.pdf}
 \dbc{It seems you are using RPS to indicate throughput, which is the rate that we make requests not the rate that system responds. However, if latency is low and requests don't pile up we can say system can handle this request rate. We need to be a bit clear on this.}
+\gkc{Okay, Thanks for clearing it out}
 
-From \cref{ptab:obs_all_60_min_summary_throughput} to \cref{ptab:obs_all_15_min_summary_throughput} it can be seen that the average and 90\% percentile latency to insert scalar and vector timeseries increased by 2 ms and 10 ms, respectively as we increase the request size. Still \acrshort{wdias} was able to accept 40.5 \acrshort{rps}. However, while retrieving the scalar and vector timeseries data, latency got doubled while handling the 15-min data compared to 30-min data. \db{This is due to heavy writes on the timeseries database.} However, there is no noticeable reduction in RPS. Therefore, even through the data volume increased by four times, \acrshort{wdias} performance degradation is sub-linear. 
+From \cref{ptab:obs_all_60_min_summary_throughput} to \cref{ptab:obs_all_15_min_summary_throughput} it can be seen that the average and 90\% percentile latency to insert scalar and vector timeseries increased by 2 ms and 10 ms, respectively as we increase the request size. Still \acrshort{wdias} was able to accept 40.5 \acrshort{rps}. However, while retrieving the scalar and vector timeseries data, latency got doubled while handling the 15-min data compared to 30-min data. \db{This is due to heavy writes on the timeseries database, at the same time trying to retrieve data.} However, there is no noticeable reduction in RPS. Therefore, even through the data volume increased by four times, \acrshort{wdias} performance degradation is sub-linear. 
 
 \dbc{How come heavy writing happens when retrieving data? Shouldn't it happen during ingestion. Or is it because we are running data preprocessing at the time of request? This need to be clearly explained.}
+\gkc{I meant all read and writes happens in a single database. So the db writes affects on db reads}
 
 \begin{table}[tb!]
 \centering
