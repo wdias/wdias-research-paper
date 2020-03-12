@@ -18,6 +18,7 @@
 \usepackage{todonotes}
 \newcommand{\db}[1]{\textcolor{blue!40}{#1}}
 \newcommand{\dbc}[1]{\todo[author=Dilum, inline, color=blue!40]{#1}}
+\newcommand{\gk}[1]{\textcolor{green!50}{#1}}
 \newcommand{\gkc}[1]{\todo[author=Gihan, inline, color=green!50]{#1}}
 
 \usepackage{hyperref}
@@ -138,14 +139,17 @@ The rest of the paper is organized as follows: The architecture of \acrshort{wdi
 
 \cref{pfi:wdia_components} shows the essential functions of a weather data integration and assimilation system such as integration, assimilation, and dissemination. A typical system should be capable of integrating multimodal and multidimensional spatial and temporal weather data from diverse sources such as satellites, radars, and high-end and low-end weather stations. In assimilation, the system not only stores the data but also provides them to various weather models in their desired data formats. In the dissemination step, both the captured weather data and processed data from weather models are shared with users and external systems based on their data subscriptions, timeseries metadata and geo-tag based queries, and access rights. \acrshort{wdias} supports all three of these modules.
 \dbc{Is it "Microservice Architecture" or "Microservices Architecture"? It seems one with s is more common. Check this. Then makesure entire paper use one of this (including title).}
+\gkc{I tried to follow these resources: https://martinfowler.com/articles/microservices.html. The term ''Microservice Architecture'' has sprung up over the last few years...}
+\gkc{Here also refer as ''Microservice architecture'' : https://en.wikipedia.org/wiki/Microservices#Introduction. If you think other is the correct one, we can change. Please let me know.}
 
 %While designing \acrshort{wdias}, we iterated through a few architectural designs to achieve high scalability and availability. Initially, we followed the \acrshort{soa} while using an \acrfull{esb} to integrate different modules. However, it turned out that \acrshort{esb} is not suitable for data streaming and bulk data processing, as well as suffered from a single point of failure as it uses a common bus. We also attempted the Actor model with AKKA framework where each microservice was implemented using an actor. Microservice architectures were chosen as they are resilient, flexible, and scalable, as services were independent of each otehr. However, actors messaging between different services resulted in tight code coupling between the services and the platform was over dependent on the AKKA framework.
 %To overcome these issues, we moved to container orchestration based microservices architecture. 
 %The \acrshort{wdias} used \acrfull{k8s} as the container orchestration system which is an open-source tool for automating deployment, scaling, and management of containerized applications. Using \acrshort{k8s}, users can add required resources as Nodes to the cluster, and K8s manage and deploy applications as pods into cluster nodes.
 %In next \cref{pse:wdias_architecture}, we discussed about the \acrshort{wdias} used microservice concepts such as implement microservice as dumb pipes rather implementing smart endpoints, uses database per service with access via API only, distributed Transactions over microservices using event processing, and considering distributed systems scalability in directions of X-axis scaling, Y-axis scaling and Z-axis scaling.
 
-We used microservices architecture for \acrshort{wdias}, as it enables resilient and flexible services that can be independently scaled while achieving high-availability. Such a design allows each module to be offered as a separate microservice where each module works on a separate piece of bulk or stream data. Microservices further enables modules to be written in any language and dynamically added to the system to extend its functionality. We implemented services as containerized applications, which further simplifies the deployment and maintenance of services on a cloud platform resulting in simplified administration and cost savings.
+We used microservices architecture for \acrshort{wdias}, as it enables resilient and flexible services that can be independently scaled while achieving high-availability \cite{LewisMicroservices}. Such a design allows each module to be offered as a separate microservice where each module works on a separate piece of bulk or stream data. Microservices further enables modules to be written in any language and dynamically added to the system to extend its functionality. We implemented services as containerized applications, which further simplifies the deployment and maintenance of services on a cloud platform resulting in simplified administration and cost savings. \gk{Application containerization is an alternative to virtualization that encapsulate or group the software code and all its dependencies so that it can work uniformly and consistently in any infrastructure \cite{IBMContainerizationExplained}.The concept of containerization uses as an industry standard for package software into standardized units for development, shipment, and deployment.}
 \dbc{Good to include a citation for microservices and containerization benefits.}
+\gkc{Updated}
 
 \begin{figure}[b!]
 \centerline{\includegraphics[width=0.5\textwidth]{images/separation_microservices-p1.pdf}}
@@ -158,15 +162,16 @@ We used microservices architecture for \acrshort{wdias}, as it enables resilient
 We need to give a clear explanation of Fig. 2. So add a couple of sentences for these. Highlight them so that I can focus only on those sentences.}
 \dbc{We should also touch about container solution and benefits such as scaling, and management of containerized applications. As we removed the entire para on Kubernetes (K8s) nothing is here now.}
 
-\begin{figure}[t!]
-\centerline{\includegraphics[width=0.5\textwidth]{images/microservice_architecture-handle_on_async-p1.pdf}}
-\caption{Asynchronously handling requests with microservices.}
-\label{pfi:microservice_architecture_async}
-\end{figure}
+% \begin{figure}[t!]
+% \centerline{\includegraphics[width=0.5\textwidth]{images/microservice_architecture-handle_on_async-p1.pdf}}
+% \caption{Asynchronously handling requests with microservices.}
+% \label{pfi:microservice_architecture_async}
+% \end{figure}
 
-Each piece of data is tagged with a unique identifier (ID), which is used by all microservices to handle the data. A timeseries is considered as a single piece of data. Ingestion of a large piece of data, such as radar data in \acrfull{netCDF} format, is handled asynchronously. When a request with a large piece of data is received, rather than blocking the request, a unique ID is returned to the caller. This ID can be used later to verify successful processing of data or to download them. \db{As shown in \cref{pfi:microservice_architecture_async}, we use a Status Handler to manage the status of asynchronous requests. For example, when an ingestion module receives a large piece of data it is stored on the module. Then the module publishes an event to another service to process it. Once the successful processing of the data is verified, Status Handler updates the system status.}
+Each piece of data is tagged with a unique identifier (ID), which is used by all microservices to handle the data. A timeseries is considered as a single piece of data. Ingestion of a large piece of data, such as radar data in \acrfull{netCDF} format, is handled asynchronously. When a request with a large piece of data is received, rather than blocking the request, a unique ID is returned to the caller. This ID can be used later to verify successful processing of data or to download them.
+% \db{As shown in \cref{pfi:microservice_architecture_async}, we use a Status Handler to manage the status of asynchronous requests. For example, when an ingestion module receives a large piece of data it is stored on the module. Then the module publishes an event to another service to process it. Once the successful processing of the data is verified, Status Handler updates the system status.}
 \dbc{I updated the highlighted write up. But it doesn't make much sense. Also, it's not clear how to interpret the Fig. 3 (while it has some scattered lines, it not obvious what they do). If this is not essential let's remove highlighted text including figure. But you need to fix this on thesis for sure.}
-
+\gkc{Lets remove this. It need more clarification. Since we have page limit, better to ignore this.}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Database Structure}
@@ -240,26 +245,27 @@ While a scalar data point consists of a single value, a vector data point consis
 \subsection{Query Resolution}
 \label{psubse:query_timeseries}
 
-\acrshort{wdias} supports both timeseries and geo-location based queries. For example, it can query for a timeseries in a given area. This operation uses \texttt{geoWithin} search operator for the simplicity. Other than it can also support query timeseries in an area by parameter, query available timeseries by locations and query locations within an area etc. In \cref{pli:geo_search}, the \acrshort{wdias} return the timeseries available within the area of a polygon provided as \emph{geoJson} \cite{InternetEngineeringTaskForceGeoJSON}.
+% \acrshort{wdias} supports both timeseries and geo-location based queries. For example, it can query for a timeseries in a given area. This operation uses \texttt{geoWithin} search operator for the simplicity. Other than it can also support query timeseries in an area by parameter, query available timeseries by locations and query locations within an area etc. In \cref{pli:geo_search}, the \acrshort{wdias} return the timeseries available within the area of a polygon provided as \emph{geoJson} \cite{InternetEngineeringTaskForceGeoJSON}.
+Other than the metadata manipulation API mentioned in \cref{psubse:wdias_microservices}, the \acrshort{wdias} also supports timeseries search queries and Geo queries. As an example it can \emph{query timeseries available in a given area}. This operation uses \texttt{geoWithin} search operator for the simplicity. Other than it can also support query timeseries in an area by parameter, query available timeseries by locations and query locations within an area of a polygon provided as \emph{geoJson} \cite{InternetEngineeringTaskForceGeoJSON}.
 \dbc{This section need a bit of expansion. Also, discuss who issue these queries and how the results are sent out. As we don't have a section on Export serveries they can be covered here. Perhaps even changing the name of the sub-section is an option.}
 \dbc{What's \texttt{geoWithin}?}
 \dbc{Drop Listing 2 as it's not essential.}
  
-\begin{lstlisting}[caption=Geo search timeseries, label=pli:geo_search]
-    POST <HOST_NAME>/query/timeseries
-    JSON Body:
-    {
-        "geoJson": {
-            "type": "Polygon",
-            "coordinates": [
-                [
-                    [<longitude>, <latitude>],
-                    ...
-                ]
-            ]
-        }
-    }
-\end{lstlisting}
+% \begin{lstlisting}[caption=Geo search timeseries, label=pli:geo_search]
+%     POST <HOST_NAME>/query/timeseries
+%     JSON Body:
+%     {
+%         "geoJson": {
+%             "type": "Polygon",
+%             "coordinates": [
+%                 [
+%                     [<longitude>, <latitude>],
+%                     ...
+%                 ]
+%             ]
+%         }
+%     }
+% \end{lstlisting}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Performance Analysis}
@@ -289,14 +295,14 @@ Load testing was performed using Apache JMeter with distributed testing feature,
 \acrshort{wdias} was deployed using \acrfull{eks} container orchestration platform. \cref{ptab:aws_eks_nodes} shows the list of nodes used in the experimental setup. \db{\emph{Core} node executed metadata, extensions, query, status and extension microservices. Whereas the \emph{grid} node executed the grid adapter, as well as grid data import and export services. Scalar and vector adapters, as well as scalar and vector import and export services were deployed on the \emph{scalar} node. JMeter and metric server executed on the \emph{test} node.} Given a set of computing resources, to get the better performance, we scheduled each microservice on a predefined set of nodes.
 \dbc{Some of the terms in highlighted part was never mentioned in text. Hence, it's important that these are introduced in Sec. II.A}
 
-\db{WDIAS, uses the Concurrency Thread Group with Throughput Shaping Timer because it supports the open workload approach.}
-\dbc{Highlighted sentence is not clear to me.}
+% \db{WDIAS, uses the Concurrency Thread Group with Throughput Shaping Timer because it supports the open workload approach.}
+% \dbc{Highlighted sentence is not clear to me.}
 
-\begin{itemize}
-    \item \emph{closed system model} \cite{Haggett1998AnWales} -- a new request is only triggered by the completion of a previous request, following by a think time.
-    \item \emph{open system model} -- new requests arrival independently of completions.
-\end{itemize}
-\dbc{What are these?}
+% \begin{itemize}
+%     \item \emph{closed system model} \cite{Haggett1998AnWales} -- a new request is only triggered by the completion of a previous request, following by a think time.
+%     \item \emph{open system model} -- new requests arrival independently of completions.
+% \end{itemize}
+% \dbc{What are these?}
 
 \dbc{From Table II to V it seems we separated out timeseries and grid requests. It need to be mentioned in this sub-section to avoid any confusion.}
 
