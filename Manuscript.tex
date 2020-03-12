@@ -33,44 +33,43 @@
 \lstdefinestyle{code-style}{
   backgroundcolor=\color{backcolour}, commentstyle=\color{codegreen},
   basicstyle=\ttfamily\footnotesize,
-  breakatwhitespace=false,
-  breaklines=true,
-  captionpos=b,
-  keepspaces=true,
-  numbers=left,
+  breakatwhitespace=false,         
+  breaklines=true,                 
+  captionpos=b,                    
+  keepspaces=true,                 
+  numbers=left,                    
   numbersep=5pt,
   showspaces=false,
   showstringspaces=false,
-  showtabs=false,
+  showtabs=false,                  
   tabsize=2
 }
 \lstset{style=code-style}
 
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
-    
 \begin{document}
 
 \title{WDIAS: A Microservices-Based Weather Data Integration and Assimilation System\\
 }
 
-\author{\IEEEauthorblockN{Gihan Karunarathne}
-\IEEEauthorblockA{\textit{Dept. Computer Science and Engineering} \\
-\textit{University of Moratuwa}\\
-Katubedda, Sri Lanka \\
-gihan.09@cse.mrt.ac.lk}
-\and
-\IEEEauthorblockN{H.M.N. Dilum Bandara}
-\IEEEauthorblockA{\textit{Dept. Computer Science and Engineering} \\
-\textit{University of Moratuwa}\\
-Katubedda, Sri Lanka \\
-dilumb@cse.mrt.ac.lk}
-\and
-\IEEEauthorblockN{Srikantha Herath}
-\IEEEauthorblockA{\textit{Center for Urban Water, Sri Lanka} \\
-Battaramulla, Sri Lanka \\
-admin@curwsl.org}
-}
+% \author{\IEEEauthorblockN{Gihan Karunarathne}
+% \IEEEauthorblockA{\textit{Dept. Computer Science and Engineering} \\
+% \textit{University of Moratuwa}\\
+% Katubedda, Sri Lanka \\
+% gihan.09@cse.mrt.ac.lk}
+% \and
+% \IEEEauthorblockN{H.M.N. Dilum Bandara}
+% \IEEEauthorblockA{\textit{Dept. Computer Science and Engineering} \\
+% \textit{University of Moratuwa}\\
+% Katubedda, Sri Lanka \\
+% dilumb@cse.mrt.ac.lk}
+% \and
+% \IEEEauthorblockN{Srikantha Herath}
+% \IEEEauthorblockA{\textit{Center for Urban Water, Sri Lanka} \\
+% Battaramulla, Sri Lanka \\
+% admin@curwsl.org}
+% }
 
 \maketitle
 
@@ -137,15 +136,13 @@ The rest of the paper is organized as follows: The architecture of \acrshort{wdi
 \label{psubse:wdias_microservices}
 
 \cref{pfi:wdia_components} shows the essential functions of a weather data integration and assimilation system such as integration, assimilation, and dissemination. A typical system should be capable of integrating multimodal and multidimensional spatial and temporal weather data from diverse sources such as satellites, radars, and high-end and low-end weather stations. In assimilation, the system not only stores the data but also provides them to various weather models in their desired data formats. In the dissemination step, both the captured weather data and processed data from weather models are shared with users and external systems based on their data subscriptions, timeseries metadata and geo-tag based queries, and access rights. \acrshort{wdias} supports all three of these modules.
-\dbc{Is it "Microservice Architecture" or "Microservices Architecture"? It seems one with s is more common. Check this. Then makesure entire paper use one of this (including title).}
 
 %While designing \acrshort{wdias}, we iterated through a few architectural designs to achieve high scalability and availability. Initially, we followed the \acrshort{soa} while using an \acrfull{esb} to integrate different modules. However, it turned out that \acrshort{esb} is not suitable for data streaming and bulk data processing, as well as suffered from a single point of failure as it uses a common bus. We also attempted the Actor model with AKKA framework where each microservice was implemented using an actor. Microservice architectures were chosen as they are resilient, flexible, and scalable, as services were independent of each otehr. However, actors messaging between different services resulted in tight code coupling between the services and the platform was over dependent on the AKKA framework.
-%To overcome these issues, we moved to container orchestration based microservices architecture. 
+%To overcome these issues, we moved to container orchestration based microservices architecture.  
 %The \acrshort{wdias} used \acrfull{k8s} as the container orchestration system which is an open-source tool for automating deployment, scaling, and management of containerized applications. Using \acrshort{k8s}, users can add required resources as Nodes to the cluster, and K8s manage and deploy applications as pods into cluster nodes.
 %In next \cref{pse:wdias_architecture}, we discussed about the \acrshort{wdias} used microservice concepts such as implement microservice as dumb pipes rather implementing smart endpoints, uses database per service with access via API only, distributed Transactions over microservices using event processing, and considering distributed systems scalability in directions of X-axis scaling, Y-axis scaling and Z-axis scaling.
 
 We used microservices architecture for \acrshort{wdias}, as it enables resilient and flexible services that can be independently scaled while achieving high-availability. Such a design allows each module to be offered as a separate microservice where each module works on a separate piece of bulk or stream data. Microservices further enables modules to be written in any language and dynamically added to the system to extend its functionality. We implemented services as containerized applications, which further simplifies the deployment and maintenance of services on a cloud platform resulting in simplified administration and cost savings.
-\dbc{Good to include a citation for microservices and containerization benefits.}
 
 \begin{figure}[b!]
 \centerline{\includegraphics[width=0.5\textwidth]{images/separation_microservices-p1.pdf}}
@@ -153,113 +150,69 @@ We used microservices architecture for \acrshort{wdias}, as it enables resilient
 \label{pfi:microservice_separation}
 \end{figure}
 
-\cref{pfi:microservice_separation} shows the separation of \acrshort{wdias}'s modules into the microservices where each circle represents a microservice. All microservices communicate using a RESTful API. Import modules are shown on left of figure while export modules are shown on right. Each import microservice coverts a specif type of data and forwards them to the relevant data adapter module which is optimized to store a specific type of data. Each adapter has an its own database instance enabling horizontal scalability. For example, timeseries metadata is stored in a relational database for faster querying. It can also be cased in an in-memory database to provide low-latency access. Similarly, export module microservices provide data to weather models and users while converting them to the desired format.
-\dbc{We never mention about Raw, Binary, Fetch, and Upload. Also support for JSON, CSV, etc. Also, data transform operations are not metioned here (while they are given in II.3 we also need a sentence of 2 here. Extension Data, scheduler, etc. are not discussed either. 
-We need to give a clear explanation of Fig. 2. So add a couple of sentences for these. Highlight them so that I can focus only on those sentences.}
-\dbc{We should also touch about container solution and benefits such as scaling, and management of containerized applications. As we removed the entire para on Kubernetes (K8s) nothing is here now.}
+\cref{pfi:microservice_separation} shows the separation of \acrshort{wdias}'s modules into the microservices where each circle represents a microservice. The left side of \cref{pfi:microservice_separation} shows the import modules of the WDIAS, and the right side shows the export modules. each import microservice only does the specific task of converting and forwarding the request to the correct data adapter module. each data type, there is an adapter microservice is running which is optimized to storing such type of data. Each adapter has an isolated database, and the database is hosted separately for the high performance.
+And timeseries metadata stored using RDBMS which gives more performance over retrieving metadata data, and cached with the In-Memory database to fast access. The system generates a unique identifier for each timeseries, and throughout the WDIAS, other microservice use it to handle data for fast access. Export module microservice follows the same concepts and provides the capability to export the data into required formats of the weather models.
 
 \begin{figure}[t!]
 \centerline{\includegraphics[width=0.5\textwidth]{images/microservice_architecture-handle_on_async-p1.pdf}}
-\caption{Asynchronously handling requests with microservices.}
+\caption{Handle requests asynchronously with the \acrshort{wdias} microservices.}
 \label{pfi:microservice_architecture_async}
 \end{figure}
 
-Each piece of data is tagged with a unique identifier (ID), which is used by all microservices to handle the data. A timeseries is considered as a single piece of data. Ingestion of a large piece of data, such as radar data in \acrfull{netCDF} format, is handled asynchronously. When a request with a large piece of data is received, rather than blocking the request, a unique ID is returned to the caller. This ID can be used later to verify successful processing of data or to download them. \db{As shown in \cref{pfi:microservice_architecture_async}, we use a Status Handler to manage the status of asynchronous requests. For example, when an ingestion module receives a large piece of data it is stored on the module. Then the module publishes an event to another service to process it. Once the successful processing of the data is verified, Status Handler updates the system status.}
-\dbc{I updated the highlighted write up. But it doesn't make much sense. Also, it's not clear how to interpret the Fig. 3 (while it has some scattered lines, it not obvious what they do). If this is not essential let's remove highlighted text including figure. But you need to fix this on thesis for sure.}
+As shown in \cref{pfi:microservice_architecture_async}, when a request with a larger size comes to the system, it stores the data for asynchronously process the data and responds with a unique id that can use to verify whether data processed successfully or not. First it stores the data and publish an event to another service to process it. After successfully process the data by other service, it updates the system status. Also the \acrshort{wdias} provides a simple RESTful API to interact with timeseries metadata and other modules such as import, export and extension modules.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Database Structure}
 \label{psubse:wdias_database}
 
-Timeseires are pervasive in weather domain from observations to forecasting. Thus, \acrshort{wdias} is designed to be data-centric with a special focus on timeseries data. Data points in a timeseries can consists of scalar (0D), vector (1D), grid (2D), and polygon (2D) data. We used the following list of metadata to uniquely identify a timeseirs:
+The foundation of the \acrshort{wdias} is data-centric and build around the timeseries data.
+
+\paragraph{Timeseries}-- \emph{A timeseries is simply a series of data points ordered in time}. In the weather domain, its interest in timeseries in perspective of observations to forecasting. Each timeseries, the data points can be formed in different formats as well. For example, scalar (0D), vector (1D), grid (2D), and polygon (2D).
+
+Following list is the timeseries metadata which can use to uniquely identify one timeseries from another which are call as \emph{key attributes}.
 
 \begin{itemize}
-    \item \texttt{Module ID} -- is the source of data, e.g., weather station ID.
-    \item \texttt{Location} -- that the data corresponds to, e.g., point locations and regular or irregular grid locations.
-    \item \texttt{Value Type} -- indicates whether data consists of scalar, vector, grid, or polygon values.
-    \item \texttt{Parameters} -- indicate the ambient measurements, e.g., temperature and pressure.
-    \item \texttt{Timeseries Type} -- indicates whether the data is historical or forecast of a model.
-    \item \texttt{Time Step} -- indicates the whether the sampling interval is uniform or not.
+    \item \texttt{Module ID}--  String field which describe the source of the data generated.
+    \item \texttt{Value Type}--  Scalar, Vector, Grid type
+    \item \texttt{Location}-- Location of the timeseries. Point location, regular grid location or irregular grid location.
+    \item \texttt{Parameter}-- variable measuring against a location
+    \item \texttt{Timeseries Type} - Such as Historical or forecast
+    \item \texttt{Time Step}-- Unit of Second, Minute, Hour, Day, Week, Month, Year, or NonEqualDistance. One of multiplier or divider can be used to define the interval between each measurement.
 \end{itemize}
 
-While a scalar data point consists of a single value, a vector data point consists of two values (e.g., magnitude and the direction of a vector). Whereas a grid data point consists of multiple values. Therefore, to manipulate data efficiently, as seen on \cref{pfi:database_structure} we used a combination of relational, NoSQL, timeseries, and in-memory databases, as well as flat files. He handle scalar and vector values using two different microservices, namely \textit{adapter-scalar} and \textit{adapter-vector} (see \cref{pfi:microservice_separation}), to isolate performance and faults. We used \acrshort{netCDF} files to store grid data as it is the de-factor standard for creating, accessing, and sharing of array-oriented scientific data. To resolve a query targeting timeseries data, we need to first identify the source and type of data, as well as where they are stored and what time or geographic range to retrieve. Hence, we used a relational database to manipulate timeseires metadata with low latency. We further used an in-memory database to enable low-latency query resolution by caching data stored in \textit{adapter-metadata} and \textit{adapter-extension} microservices. Further, spacial indexing (aka., geo-indexing) is needed to support queries based on the geo-location of data which are one of the hardest queries to resolve. Therefore, we used a document-oriented database for geo-indexing and searching.
-\dbc{We should also mention briefly why we selected InfluxDB, MySQL, in-memory (what's the product?), and NoSQL (what's the product)}
+Scalar data point only consist of a single value. And Vector data point consists of two values such as magnitude and the direction of the Vector. But for Grid data, a point can consist of multiple values. To get the advantage of storing data efficiently, we can use a set of different databases based on the advantage of using them for each valueType. To support search queries with lower latency, it required to use indexing for the fast search for timeseries metadata. Further, Geo-based indexing is required to support Geo-based search queries based on the locations. Above capabilities achieved by using a database structure with compose of multiple databases as shown in \cref{pfi:database_structure}.
 
 \begin{figure}[t!]
 \centerline{\includegraphics[width=0.4\textwidth]{images/wdias_database_structure_p1.pdf}}
 \caption{\acrshort{wdias} database structure.}
 \label{pfi:database_structure}
 \end{figure}
-\dbc{Fig. 4 looked washed out. Make lines black.}
 
-
+Since metadata consists of multiple key attributes, the data can be efficiently store using a Relational Database Management System (RDBMS). Two instances of Timeseries database is using in the WDIAS system by adapter-scalar and adapter-vector services. Use \acrfull{netCDF} for store the Grid data which support the creation, access, and sharing of array-oriented scientific data. And  in-memory database for caching for fast access the frequent access data in adapter-metadata and adapter-extension. Using a document-oriented database with support the Geo searching capabilities.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Data Preprocessing}
+\subsection{Weather Data Preprocessing}
 \label{psubse:data_preprocessing}
 
-\acrshort{wdias} provides the data preprocessing capabilities via extension modules. As seen in \cref{pfi:summary_weather_data_preprocessing} each extension could be considered as a mathematical function that takes \texttt{p} timeseries variables as input and output \texttt{n} timeseries variables. As seen on bottom half of figure, these functions are typically used for data quality checks, interpolation (both serial and spatial), and transformation. To further extend the function at run time without creating a new module, the \textit{bind constant} can be set at the time of triggering an extension. For example, such features are needed as we may need to generate two different timeseries by sub-sampling 1-minute data to 5 minutes and one hour. While this increases the data stored by \acrshort{wdias}, it reduces the computational time as NWMs can readily use the data without transforming them at the run time. \cref{pli:extension_triggers} shows the format of a request made to update an extension at the time of triggering it. Each extension trigger needs to have a unique ID (line 2). Then the user can define the extension type and the microservice responsible of processing it (lines 3 and 4). Using lines 5-12 the user can map timeseries into input variable \emph{X} and output variablr \emph{Y} as seen in \cref{pfi:summary_weather_data_preprocessing}. Finally, user can also define when to trigger the extension and any options such as bind constant. Using different update requests \acrshort{wdias} can create multiple triggers for an extension. The \emph{Extension Handler} is responsible for triggering the correct extension when there is a change on the subscribed extension trigger's \emph{OnChange} timeseries. 
-\dbc{We never talked about a \emph{OnChange} timeseries.}
+The \acrshort{wdias} provides the data preprocessing capabilities via extension modules with a simple generic mathematical function model.
 
 \begin{figure}[t!]
 \centerline{\includegraphics[width=0.4\textwidth]{images/summary_weather_data_preprocessing_p1.pdf}}
-\caption{Functional approach to weather data preprocessing.}
+\caption{Generic functional approach to weather data preprocessing.}
 \label{pfi:summary_weather_data_preprocessing}
 \end{figure}
 
+Each extension is considering as a mathematical function which can take \texttt{p} number of input timeseries variables and output \texttt{n} number of timeseries variables. Other than that, at the time of processing the system can configure to provide bind constant which can provide while configuring an extension. This means it is possible to change the behavior of an existing function by providing different bind constant at the time of creating new triggers for an extension. The system allow to create new triggers and update them at the run time via API with the POST request.
 
-\begin{lstlisting}[language=Python, caption=Format of a request made to update an extension., label=pli:extension_triggers]
-{
-    "extensionId": "", //Trigger unique ID
-    "extension": "Interpolation | Transformation | Validation",
-    "function": "", //Mapping microservice
-    "variables": [ //Timeseries mapping to variables
-        {
-            "variableId": "",
-            "metadata/metadtaIds": {...}
-        }
-    ],
-    "inputVariables": [], //Input timeseries
-    "outputVariables": [], //Output timeseries
-    "trigger": [ // When to trigger the function
-        {
-            "trigger_type": "OnChange | OnTime",
-            "trigger_on": []
-        }
-    ],
-    "options": { //Run time bind constant data
-    }
-}
-\end{lstlisting}
-
-
-%\emph{Extension Handler} is responsible for triggering the correct Extension with metadata at a given time which is provided at the creation on extension trigger with the value of \emph{OnTime} cronjob string value. To improve the performance of triggering cronjobs at given time schedules, the WDIAS added few optimization mechanisms.
+\emph{Extension Handler} is responsible for triggering the correct Extension with metadata when there is any change on the subscribed extension trigger's \emph{OnChange} timeseries.
+\emph{Extension Handler} is responsible for triggering the correct Extension with metadata at a given time which is provided at the creation on extension trigger with the value of \emph{OnTime} cronjob string value. To improve the performance of triggering cronjobs at given time schedules, the WDIAS added few optimization mechanisms.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Query Resolution}
+\subsection{Query Timeseries Metadata}
 \label{psubse:query_timeseries}
 
-\acrshort{wdias} supports both timeseries and geo-location based queries. For example, it can query for a timeseries in a given area. This operation uses \texttt{geoWithin} search operator for the simplicity. Other than it can also support query timeseries in an area by parameter, query available timeseries by locations and query locations within an area etc. In \cref{pli:geo_search}, the \acrshort{wdias} return the timeseries available within the area of a polygon provided as \emph{geoJson} \cite{InternetEngineeringTaskForceGeoJSON}.
-\dbc{This section need a bit of expansion. Also, discuss who issue these queries and how the results are sent out. As we don't have a section on Export serveries they can be covered here. Perhaps even changing the name of the sub-section is an option.}
-\dbc{What's \texttt{geoWithin}?}
-\dbc{Drop Listing 2 as it's not essential.}
- 
-\begin{lstlisting}[caption=Geo search timeseries, label=pli:geo_search]
-    POST <HOST_NAME>/query/timeseries
-    JSON Body:
-    {
-        "geoJson": {
-            "type": "Polygon",
-            "coordinates": [
-                [
-                    [<longitude>, <latitude>],
-                    ...
-                ]
-            ]
-        }
-    }
-\end{lstlisting}
+Other than the metadata manipulation API mentioned in \cref{psubse:wdias_microservices}, the \acrshort{wdias} also supports timeseries search queries and Geo queries. As an example it can \emph{query timeseries available in a given area}. This operation uses \texttt{geoWithin} search operator for the simplicity. Other than it can also support query timeseries in an area by parameter, query available timeseries by locations and query locations within an area of a polygon provided as \emph{geoJson} \cite{InternetEngineeringTaskForceGeoJSON}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Performance Analysis}
@@ -269,36 +222,20 @@ While a scalar data point consists of a single value, a vector data point consis
 \subsection{Experimental Setup}
 \label{psubse:experimental_setup}
 
-%The test plan is to perform load testing on whole system, and analyze the scalability of the system while measuring the operations perform on each module. Two variables can vary while doing performance testing.
-%\begin{enumerate}
-%    \item \acrfull{rps}
-%    \item Request size
-%\end{enumerate}
+The test plan is to perform load testing on whole system, and analyze the scalability of the system while measuring the operations perform on each module. Two variables can vary while doing performance testing.
+\begin{enumerate}
+    \item \acrfull{rps}
+    \item Request size
+\end{enumerate}
 
-As a weather data integration and assimilation system is expected to handle variety of data sources and types, we created a synthetic workload consisting of 70\% scalar, 20\% vector, and 10\% grid values. 
-We created 1,000 timeseries using 30-day traces from five weather stations of \acrlong{curw}. Locations of timeseries were set based on the Google's Countries dataset \cite{GoogleGoogleCounties}. For grid data we considered a grid size of 100. 
-\dbc{Clearly mention what weather attributes we used and how we build a 1000 timeseries using only 5 weather stations. This should also cover how vector and grid values were generated.}
-\dbc{When referring to tables T should be capital}
+\acrshort{wdias} is getting a mix of all the data types in the percentages of 70\% scalar, 20\% vector, and 10\% grid values.
+For a given request size the RPS increased in steps such as 600, 3000, 6000, 12000, and 18000 requests per minute. In each step, the RPS holds for a moment to give some time for the system to get stabilized after increasing linearly.
 
-Load testing was performed using Apache JMeter with distributed testing feature, which use multiple workload generators to create a high throughput workload. We vary the request size by varying the resolution of data expected from the system, e.g., we requested aggregated data for an hour, 30 minutes, and 15 minutes. For a given request size, we issued requests at different rates such as 10, 50, 100, 200, and 600 requests per second. For a given combination of request size and rate, we tested the system for 30 minutes. We then moved to a more demanding combination of request size and rate to measure effectiveness of auto scaling of the container orchestration system. After reaching the highest request size and rate combination, we also measured how the system will gradually release the resources when there is not load on the system. 
-\dbc{What's a request here, ingest or export? While I see Insert, Retrieve, Query in tables, we are not clearly explaining them here.}
-\dbc{Given that we had a mix of 70 : 20 : 10 requests what's mean by request size is not quite clear (I updated above sentence, but still feel like we are not clearly explaining it)?}
-\dbc{After modifying I ended up this part of sentence ``and perform 5minutes test run with timeseries queries.'' which I was not clear how to edit} 
-\dbc{Be clear that aggregation of 1H, 30min, and 15min was done only for Retrieve requests.}
+Holding the peak load will help to show whether the system is capable of scaling more than the proposed load testing plan. After the peak, the test case goes through a cool-down period to measure the ability to shrink down the resources when there is not any load on the system. During the test plan, it runs for 30minutes of period with changing the request size form hourly data to 30 minutes data, then 15 minutes data. Then another 30 minutes load test enabling the auto scaling of container orchestration system, and perform 5minutes test run with timeseries queries. The the results are evaluate against the performance metrics of throughput, latency, resource utilization and auto-scaling.
 
-\acrshort{wdias} was deployed using \acrfull{eks} container orchestration platform. \cref{ptab:aws_eks_nodes} shows the list of nodes used in the experimental setup. \db{\emph{Core} node executed metadata, extensions, query, status and extension microservices. Whereas the \emph{grid} node executed the grid adapter, as well as grid data import and export services. Scalar and vector adapters, as well as scalar and vector import and export services were deployed on the \emph{scalar} node. JMeter and metric server executed on the \emph{test} node.} Given a set of computing resources, to get the better performance, we scheduled each microservice on a predefined set of nodes.
-\dbc{Some of the terms in highlighted part was never mentioned in text. Hence, it's important that these are introduced in Sec. II.A}
+During the performance test, it creates 1000 timeseries using the locations are taken from Google's Countries Public Data set \cite{GoogleGoogleCounties}, and uses static 100 Grid locations for store Grid data. Load test perform using  JMeter and used the Distributed Testing feature to generate higher load. It uses the master-slave approach and it allowed to handle all the test cases via single instance, rather handling separate instances. The system is capable of storing any numeric value up to 3 decimal points. It does not make any difference based on the parameter type whether it is the precipitation or the temperature. Thus during the performance testing,  JMeter uses real precipitation data from \acrshort{curw}. One month period of data for five weather stations has been using to prepare the test data.
 
-\db{WDIAS, uses the Concurrency Thread Group with Throughput Shaping Timer because it supports the open workload approach.}
-\dbc{Highlighted sentence is not clear to me.}
-
-\begin{itemize}
-    \item \emph{closed system model} \cite{Haggett1998AnWales} -- a new request is only triggered by the completion of a previous request, following by a think time.
-    \item \emph{open system model} -- new requests arrival independently of completions.
-\end{itemize}
-\dbc{What are these?}
-
-\dbc{From Table II to V it seems we separated out timeseries and grid requests. It need to be mentioned in this sub-section to avoid any confusion.}
+\acrshort{wdias} is using the \acrfull{k8s} as the container orchestration system which is an open-source system for automating deployment, scaling, and management of containerized applications. They are many \acrshort{k8s} solutions available as a cloud service, we used \acrfull{eks} based on the availability. \cref{ptab:aws_eks_nodes} shows the list of nodes/computers used during the performance test.
 
 \begin{table}[tb!]
 \caption{\acrshort{eks} nodes}
@@ -306,7 +243,7 @@ Load testing was performed using Apache JMeter with distributed testing feature,
 \begin{adjustbox}{width=0.45\textwidth}
 \begin{tabular}{|l|r|r|r|r|l|}
 \hline
-\textbf{Node} & \textbf{vCPUs} & \textbf{RAM (GB)} & \textbf{Storage (GB)} & \textbf{Quantity} & \textbf{EC2 Name} \\ \hline
+\textbf{Node Label} & \textbf{vCPU} & \textbf{RAM (GB)} & \textbf{Storage (GB)} & \textbf{Quantity} & \textbf{EC2 Name} \\ \hline
 core & 16 & 32 & 15 & 1 & c5.4xlarge \\ \hline
 grid & 8 & 16 & 25 & 1 & c5.2xlarge \\ \hline
 scalar & 8 & 16 & 20 & 1 & c5.2xlarge \\ \hline
@@ -318,82 +255,83 @@ test & 4 & 10.5 & 5 & 1 & c5n.xlarge \\ \hline
 \end{table}
 
 
+To get better performance using the available resources, it is possible to schedule each microservice into a predefined set of nodes. Pods are assigned to the nodes \cref{ptab:aws_eks_nodes} based on the node label as below;
+\begin{itemize}
+    \item \emph{core} -- metadata, extensions, query, status and extension services
+    \item \emph{grid} -- grid adapter, import and export grid data
+    \item \emph{scalar} -- scalar and vector adapters, import and export of same data types
+    \item \emph{test} --  JMeter and metric server
+\end{itemize}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Performance Evaluation}
 \label{psubse:performance_evaluation}
 
-\cref{ptab:obs_all_60_min_summary_throughput} to \cref{ptab:obs_all_15_min_summary_throughput} show the throughput (measured as \acrlong{rps}), latency, and errors under three different data resolutions with a fixed service setup. Whereas \cref{ptab:obs_all_auto_15_min_summary_throughput} shows the performance with the container auto-scaling. It can be seen that each test resulted in approximately 310K requests within 30 minutes. Avg., 90\%, and STD indicates the average, standard deviation, and 90\% percentile for latency.  Other than some grid timeseries inserts, all other operations succeed with no errors.
-
-\dbc{What's the request rate when collecting data for Tables II to V?}
-\dbc{It seems you are using RPS to indicate throughput, which is the rate that we make requests not the rate that system responds. However, if latency is low and requests don't pile up we can say system can handle this request rate. We need to be a bit clear on this.}
-
-From \cref{ptab:obs_all_60_min_summary_throughput} to \cref{ptab:obs_all_15_min_summary_throughput} it can be seen that the average and 90\% percentile latency to insert scalar and vector timeseries increased by 2 ms and 10 ms, respectively as we increase the request size. Still \acrshort{wdias} was able to accept 40.5 \acrshort{rps}. However, while retrieving the scalar and vector timeseries data, latency got doubled while handling the 15-min data compared to 30-min data. \db{This is due to heavy writes on the timeseries database.} However, there is no noticeable reduction in RPS. Therefore, even through the data volume increased by four times, \acrshort{wdias} performance degradation is sub-linear. 
-
-\dbc{How comeheavy writing happens when retrieving data? Shouldn't it happen during ingestion. Or is it because we are running data preprocessing at the time of request? This need to be clearly explained.}
+While performing the load testing, each test plan performed around 310k of total sample requests within 30minutes according to the \cref{ptab:obs_all_60_min_summary_throughput} to \cref{ptab:obs_all_15_min_summary_throughput}. The ratio between Scalar and Vector to Grid operations around 71k:8k with the ratio of 90\%:10\%.
+Other than insert Grid timeseries, other operations succeed with 0\% error rate.
 
 \begin{table}[tb!]
 \centering
-\caption{Performance while processing 60-min data requests.}
+\caption{Throughput and Latency of load testing with 60min data}
 \begin{adjustbox}{width=0.45\textwidth}
 % \footnotesize
 \begin{tabular}{|l|r|r|r|r|r|r|}
 \hline
-\textbf{Request Type} & \textbf{\# Samples} & \textbf{RPS} & \textbf{Avg.} & \textbf{90\%} & \textbf{STD} & \textbf{Error \%} \\ \hline
-Insert Timeseries & 71826 & 40.5 & 28 & 31 & 58.74 & 0.00\% \\ \hline
-Retrieve Timeseries & 71796 & 40.7 & 8 & 10 & 4.18 & 0.00\% \\ \hline
-Insert Grid & 7982 & 4.5 & 23 & 26 & 4.23 & 0.06\% \\ \hline
-Retrieve Grid & 7979 & 4.5 & 68 & 75 & 10.11 & 0.00\% \\ \hline
-Query Location & 71804 & 40.5 & 3 & 3 & 1.52 & 0.00\% \\ \hline
-\textbf{TOTAL} & 311182 & 175.4 & 127 & 503 & 207.80 & 0.00\% \\ \hline
-%\multicolumn{4}{l}{$^{\mathrm{a}}$S.D.: Standard Deviation}{$^{\mathrm{b}}$90\%: 90\% percentile}
+\textbf{Label} & \textbf{Samples} & \textbf{Avg} & \textbf{90\%$^{\mathrm{a}}$} & \textbf{S.D.$^{\mathrm{b}}$} & \textbf{Error \%} & \textbf{RPS} \\ \hline
+Insert Timeseries & 71826 & 28 & 31 & 58.74 & 0.00\% & 40.5 \\ \hline
+Retrieve Timeseries & 71796 & 8 & 10 & 4.18 & 0.00\% & 40.7 \\ \hline
+Insert Grid & 7982 & 23 & 26 & 4.23 & 0.06\% & 4.5 \\ \hline
+Retrieve Grid & 7979 & 68 & 75 & 10.11 & 0.00\% & 4.5 \\ \hline
+Query: Location & 71804 & 3 & 3 & 1.52 & 0.00\% & 40.5 \\ \hline
+\textbf{TOTAL} & 311182 & 127 & 503 & 207.80 & 0.00\% & 175.4 \\ \hline
+\multicolumn{4}{l}{$^{\mathrm{a}}$S.D.: Standard Deviation}{$^{\mathrm{b}}$90\%: 90\% percentile}
 \end{tabular}
 \end{adjustbox}
 \label{ptab:obs_all_60_min_summary_throughput}
 \end{table}
 
-\dbc{We need to use a more meaningful term than ``60-min data'', ``30-min data', and ``15-min data'' because these reflect only the size of Retrieve requests. If this also indicates Insert timeseries' sampling interval, we need to clearly mention this in Sec. III.A}
+The average latency of inserting Scalar and Vector timeseries data increased by 1ms when the request size increased. But for the 90\% percentile of insertions increased from 31ms to 41ms. But the standard deviation kept same. \acrshort{wdias} were able to perform with the same throughput of 40.5 \acrshort{rps} without significant change in latency which shows the scalability of the system.
+While retrieving the Scalar and Vector timeseries data, the system was able to respond with in 10ms for 60minutes and 30minutes data with lesser standard deviation. But the latency got double when handling the 15minutes data. This caused by heavy writes on the timeseries database.
 
 \begin{table}[tb!]
-\caption{Performance while processing 30-min data requests.}
+\caption{ Throughput and Latency of load testing with 30min data}
 \begin{center}
 \begin{adjustbox}{width=0.45\textwidth}
 % \footnotesize
 \begin{tabular}{|l|r|r|r|r|r|r|}
 \hline
-\textbf{Request Type} & \textbf{\# Samples} & \textbf{RPS} & \textbf{Avg.} & \textbf{90\%} & \textbf{STD} & \textbf{Error \%} \\ \hline
-Insert Timeseries & 71759 & 40.5 & 29 & 32 & 50.97 & 0.00\% \\ \hline
-Retrieve Timeseries & 71730 & 40.6 & 9 & 10 & 6.04 & 0.00\% \\ \hline
-Insert Grid & 7972 & 4.5 & 44 & 49 & 8.17 & 0.08\% \\ \hline
-Retrieve Grid & 7971 & 4.5 & 81 & 93 & 15.15 & 0.00\% \\ \hline
-Query Location & 71734 & 40.5 & 3 & 3 & 1.90 & 0.00\% \\ \hline
-TOTAL & 310878 & 175.3 & 129 & 0 & 207.10 & 0.00\% \\ \hline
-%\multicolumn{4}{l}{$^{\mathrm{a}}$S.D.: Standard Deviation}{$^{\mathrm{b}}$90\%: 90\% percentile}
+\textbf{Label} & \textbf{Samples} & \textbf{Avg} & \textbf{90\%$^{\mathrm{a}}$} & \textbf{S.D.$^{\mathrm{b}}$} & \textbf{Error \%} & \textbf{RPS} \\ \hline
+Insert Timeseries & 71759 & 29 & 32 & 50.97 & 0.00\% & 40.5 \\ \hline
+Retrieve Timeseries & 71730 & 9 & 10 & 6.04 & 0.00\% & 40.6 \\ \hline
+Insert Grid & 7972 & 44 & 49 & 8.17 & 0.08\% & 4.5 \\ \hline
+Retrieve Grid & 7971 & 81 & 93 & 15.15 & 0.00\% & 4.5 \\ \hline
+Query: Location & 71734 & 3 & 3 & 1.90 & 0.00\% & 40.5 \\ \hline
+TOTAL & 310878 & 129 & 0 & 207.10 & 0.00\% & 175.3 \\ \hline
+\multicolumn{4}{l}{$^{\mathrm{a}}$S.D.: Standard Deviation}{$^{\mathrm{b}}$90\%: 90\% percentile}
 \end{tabular}
 \end{adjustbox}
 \label{ptab:obs_all_30_min_summary_throughput}
 \end{center}
 \end{table}
 
-Latency to insert grid timeseries data is relatively low compared to scalar or vector inserts as grid data are handle asynchronously. When the number of grid files doubled, latency also doubles. \db{Yet, \acrshort{wdias} was able to handle the all the incoming requests.}
-\dbc{We need to talk about why errors increased.}
+When inserting the Grid timeseries data, the average latency was less than the insert Scalar or Vector data, because of the Grid data handle asynchronously. When the number of Grid files doubled, each time the latency also got doubled. Notably, the \acrshort{wdias} was able to perform with same throughput with lesser standard deviation. Also, for each test case the system was able to kept the same latency throughout test run without any significant change. This also show the scalability of the Grid data in the \acrshort{wdias}.
 Retrieving of Grid timeseries data happens on demand during the load test. But it is possible to upgrade the system to support asynchronously download alongside with direct download. Because of that, the latency of download the the Grid data is bit higher than the other test cases. In that case also, the \acrshort{wdias} perform with keeping the same throughput with lower standard deviation which shows the scalability of the export Grid data module.
 
 \begin{table}[tb!]
-\caption{Performance while processing 15-min data requests.}
+\caption{ Throughput and Latency of load testing with 15min data}
 \begin{center}
 \begin{adjustbox}{width=0.45\textwidth}
 % \footnotesize
 \begin{tabular}{|l|r|r|r|r|r|r|}
 \hline
-\textbf{Request Type} & \textbf{\# Samples} & \textbf{RPS} & \textbf{Avg.} & \textbf{90\%} & \textbf{STD} & \textbf{Error \%} \\ \hline
-Insert Timeseries & 71775 & 40.5 & 30 & 41 & 51.71 & 0.00\%  \\ \hline
-Retrieve Timeseries & 71736 & 40.6 & 23 & 32 & 50.18 & 0.00\%  \\ \hline
-Insert Grid & 7975 & 4.5 & 91 & 112 & 19.58 & 1.42\% \\ \hline
-Retrieve Grid & 7972 & 4.5 & 118 & 165 & 56.15 & 0.00\% \\ \hline
-Query Location & 71749 & 40.5 & 3 & 4 & 2.32 & 0.00\% \\ \hline
-\textbf{TOTAL} & 310934 & 175.4 & 134 & 503 & 206.40 & 0.04\% \\ \hline
-%\multicolumn{4}{l}{$^{\mathrm{a}}$S.D.: Standard Deviation}{$^{\mathrm{b}}$90\%: 90\% percentile}
+\textbf{Label} & \textbf{Samples} & \textbf{Avg} & \textbf{90\%$^{\mathrm{a}}$} & \textbf{S.D.$^{\mathrm{b}}$} & \textbf{Error \%} & \textbf{RPS} \\ \hline
+Insert Timeseries & 71775 & 30 & 41 & 51.71 & 0.00\% & 40.5 \\ \hline
+Retrieve Timeseries & 71736 & 23 & 32 & 50.18 & 0.00\% & 40.6 \\ \hline
+Insert Grid & 7975 & 91 & 112 & 19.58 & 1.42\% & 4.5 \\ \hline
+Retrieve Grid & 7972 & 118 & 165 & 56.15 & 0.00\% & 4.5 \\ \hline
+Query: Location & 71749 & 3 & 4 & 2.32 & 0.00\% & 40.5 \\ \hline
+\textbf{TOTAL} & 310934 & 134 & 503 & 206.40 & 0.04\% & 175.4 \\ \hline
+\multicolumn{4}{l}{$^{\mathrm{a}}$S.D.: Standard Deviation}{$^{\mathrm{b}}$90\%: 90\% percentile}
 \end{tabular}
 \end{adjustbox}
 \label{ptab:obs_all_15_min_summary_throughput}
@@ -404,20 +342,20 @@ Throughout all test plans, the \acrshort{wdias} system performed better on servi
 % To get better performance test on the query module, we performed set of complex queries as shown in the \cref{ptab}
 
 \begin{table}[tb!]
-\caption{Performance while processing 60-min data requests when auto-scaling is enabled.}
+\caption{Throughput and Latency of load testing with 15min data while enabled K8s auto-scaling}
 \begin{center}
 \begin{adjustbox}{width=0.45\textwidth}
 \footnotesize
 \begin{tabular}{|l|r|r|r|r|r|r|}
 \hline
-\textbf{Request Type} & \textbf{\# Samples} & \textbf{RPS} & \textbf{Avg.} & \textbf{90\%} & \textbf{STD} & \textbf{Error \%}\\ \hline
-Insert Timeseries & 71727 & 40.5 & 34 & 27 & 118.78 & 0.00\% \\ \hline
-Retrieve Timeseries & 71693 & 40.5 & 7 & 9 & 18.72 & 0.00\% \\ \hline
-Insert Grid & 7968 & 4.5 & 87 & 98 & 14.07 & 0.18\% \\ \hline
-Retrieve Grid & 7965 & 4.5 & 89 & 110 & 37.79 & 0.00\% \\ \hline
-Query Location & 71704 & 40.5 & 1 & 2 & 2.05 & 0.00\% \\ \hline
-\textbf{TOTAL} & 310734 & 175.3 & 130 & 501 & 212.35 & 0.00\% \\ \hline
-%\multicolumn{4}{l}{$^{\mathrm{a}}$S.D.: Standard Deviation}{$^{\mathrm{b}}$90\%: 90\% percentile}
+\textbf{Label} & \textbf{Samples} & \textbf{Avg} & \textbf{90\%$^{\mathrm{a}}$} & \textbf{S.D.$^{\mathrm{b}}$} & \textbf{Error \%} & \textbf{RPS} \\ \hline
+Insert Timeseries & 71727 & 34 & 27 & 118.78 & 0.00\% & 40.5 \\ \hline
+Retrieve Timeseries & 71693 & 7 & 9 & 18.72 & 0.00\% & 40.5 \\ \hline
+Insert Grid & 7968 & 87 & 98 & 14.07 & 0.18\% & 4.5 \\ \hline
+Retrieve Grid & 7965 & 89 & 110 & 37.79 & 0.00\% & 4.5 \\ \hline
+Query: Location & 71704 & 1 & 2 & 2.05 & 0.00\% & 40.5 \\ \hline
+\textbf{TOTAL} & 310734 & 130 & 501 & 212.35 & 0.00\% & 175.3 \\ \hline
+\multicolumn{4}{l}{$^{\mathrm{a}}$S.D.: Standard Deviation}{$^{\mathrm{b}}$90\%: 90\% percentile}
 \end{tabular}
 \end{adjustbox}
 \label{ptab:obs_all_auto_15_min_summary_throughput}
@@ -442,18 +380,8 @@ The observations are almost similar to \cref{ptab:obs_all_15_min_summary_through
 \end{figure}
 
 \cref{pfi:test_obs_auto_all_15_min_throughput_vs_threads} shows the total server's transaction throughput against the number of active threads.
-The formula for total server transaction throughput is \(<active threads> * 1 second / <1 thread response time>\) \cite{JMeterPluginsTransactionPlugin}. It shows the statistical maximum possible number of transactions based on the number of users accessing the application.
+The formula for total server transaction throughput is \(<active threads> * 1 second / <1  thread response time>\) \cite{JMeterPluginsTransactionPlugin}. It shows the statistical maximum possible number of transactions based on the number of users accessing the application.
 By combining the \cref{pfi:test_obs_auto_all_15_min_latency_vs_hits}, this graph shows that the throughput of the system gets increased without much change in the latency, thus it proves the scalability of the \acrshort{wdias}.
-
-\begin{figure}[tb!]
-    \centering
-    \includegraphics[width=0.5\textwidth]{results/obs/all_auto/obs_all_auto_15m_import_grid_pod.png}
-    \caption{Number of running replicas of import ascii grid microservice over time with auto-scaling enabled.}
-    \label{pfi:obs_all_auto_15m_import_grid_pod}
-\end{figure}
-
-\cref{pfi:obs_all_auto_15m_import_grid_pod} shows the number of import-ascii-grid-upload pods scheduled overtime. The auto-scaling enabled with the configurations of 1 to 10 pods with the recommended CPU usage with 80\%. And the pods scheduled with 1 CPU requested, and limit with 2 CPUs per pod.
-As the graph shows, 3 pods scheduled at the initial as per the configuration of the helm chart. While increasing the workload, new pods get spawn while keeping the constraint of 80\% of recommended CPU utilization. After \acrshort{k8s} spawn 10 maximum pods, it stops spawning new pods. But the pods were able to perform with vertical scaling since those are not hit the CPU limit of 2.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Performance Metrics Analysis}
@@ -465,14 +393,14 @@ During the \cref{ptab:obs_all_auto_15_min_summary_throughput} test run, the perf
 While keeping the latency constant without significant change, the \emph{throughput} of the \acrshort{wdias} kept constant while increasing the request size from 60min data (24 data points) to 15min data (96 data points) for all the data types such as Scalar, Vector, and Grid.
 When the number of active threads increased, the \acrshort{wdias} able to provide the same throughput with maintaining the latency stable.
 
-One of the reasons for having deviations at the peak time due to uses of single instance for the data consistency such as InfluxDB for Scalar and Vector data, and netCDF with parallel support for Grid data. Further, it is possible to gain more performance using the databases with configure with high scalability and high availability features such as Sharding and Replication.
+One of the reasons for having deviations at the peak time due to uses of single instance for the data consistency such as  InfluxDB for Scalar and Vector data, and netCDF with parallel support for Grid data. Further, it is possible to gain more performance using the databases with configure with high scalability and high availability features such as Sharding and Replication.
 
 When looking into the \emph{resource utilization} of \acrshort{wdias}; since it is using the \acrshort{k8s} as the container orchestration system, it allows us to scale up and cool down the system as required based on the workload. This demonstrates the test plan of \cref{ptab:obs_all_15_min_summary_throughput}, and the system gets scale up to the maximum at the peak time. Then cool down to a single pod after finishing the test cases.
 Given above \acrshort{wdias} can run from 1 CPU node to nodes with 100 CPUs. As described in the \cref{pse:wdias_architecture}, it uses many of the concepts of modern microservice architecture to create stateless, failover, redundant microservice to achieve such capabilities.
 
 The \acrshort{wdias} supports \emph{auto scaling} by out of the box with \acrshort{k8s}. Services can configure with a maximum number of pods to avoid over resource usage. When there is not much workload on the system, the system cools down to fewer pods to save more resources. When there is an issue with a pod, \acrshort{k8s} auto-schedule another pod and remove the unhealthy pod. Also, it allows updating the system without any downtime with rollback updates.
 
-\emph{Risk of unable to process data} during the test performance, the \acrshort{wdias} processed many requests with higher request size than the normal usage with a lower rate of failures to process the requests, mainly with insert Grid data. If the usage of \acrshort{wdias} wants to reduce the risk of unable to process data, then the system can configure to run with redundant pods to handle spike of workloads. Also while configuring for the auto-scaling, the \acrshort{k8s} can configure to maintain a lower amount of CPU usage such as 50\% to 60\% rather than 80\%. Such configuration with always spawn new pods to handle double of current peak load.
+\emph{Risk of unable to process data} during the test performance, the \acrshort{wdias} processed many requests with higher request size than the normal usage with a lower rate of failures to process the requests, mainly with insert Grid data. If the usage of \acrshort{wdias} wants to reduce the risk of unable to process data, then the system can configure to run with redundant pods to handle spike of workloads. Also while configuring for the auto-scaling, the \acrshort{k8s} can configure to maintain a lower amount of CPU usage such as 50\% to 60\% rather  than 80\%. Such configuration with always spawn new pods to handle double of current peak load.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Discussion}
@@ -494,9 +422,9 @@ We used an experimental K8s cluster setup on Cloud and showed WDIAS can handle 3
 Using \acrshort{k8s} auto-scaling, the system adjusts the number of pods elastically to handle the workload and shows that the system can run from a few CPU nodes to nodes with a few hundred CPUs.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{Acknowledgment}
-\label{pse:ack}
-This research is supported in part by the grant from the Center for Urban Water, Sri Lanka.
+% \section*{Acknowledgment}
+% \label{pse:ack}
+% This research is supported in part by the grant from the Center for Urban Water, Sri Lanka.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \graphicspath{ {./images/} }
@@ -504,8 +432,5 @@ This research is supported in part by the grant from the Center for Urban Water,
 % \printbibliography[title={References}]
 \bibliographystyle{IEEEtran}
 \bibliography{mendeley}
-
-\dbc{Still these references are not quite IEEE style. I fixed some of the references in your bib file. Also, I have had issues with IEEE template in Overleaf.}
-\gkc{It is same as the class mentioned here: https://www.ieee.org/conferences/publishing/templates.html. I think, we have to add correct data in the bib to get it working. Previously, some reference showed with Capitals due to mendeley add the text as Capital rather Title case.}
 
 \end{document}
