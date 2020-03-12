@@ -139,8 +139,8 @@ The rest of the paper is organized as follows: The architecture of \acrshort{wdi
 
 \cref{pfi:wdia_components} shows the essential functions of a weather data integration and assimilation system such as integration, assimilation, and dissemination. A typical system should be capable of integrating multimodal and multidimensional spatial and temporal weather data from diverse sources such as satellites, radars, and high-end and low-end weather stations. In assimilation, the system not only stores the data but also provides them to various weather models in their desired data formats. In the dissemination step, both the captured weather data and processed data from weather models are shared with users and external systems based on their data subscriptions, timeseries metadata and geo-tag based queries, and access rights. \acrshort{wdias} supports all three of these modules.
 \dbc{Is it "Microservice Architecture" or "Microservices Architecture"? It seems one with s is more common. Check this. Then makesure entire paper use one of this (including title).}
-\gkc{I tried to follow these resources: https://martinfowler.com/articles/microservices.html. The term ''Microservice Architecture'' has sprung up over the last few years...}
-\gkc{Here also refer as ''Microservice architecture'' : https://en.wikipedia.org/wiki/Microservices#Introduction. If you think other is the correct one, we can change. Please let me know.}
+\gkc{I tried to follow these resources: https:\/\/martinfowler.com\/articles\/microservices.html. The term ''Microservice Architecture'' has sprung up over the last few years...}
+\gkc{Here also refer as ''Microservice architecture'' : https:\/\/en.wikipedia.org\/wiki\/Microservices\#Introduction. If you think other is the correct one, we can change. Please let me know.}
 
 %While designing \acrshort{wdias}, we iterated through a few architectural designs to achieve high scalability and availability. Initially, we followed the \acrshort{soa} while using an \acrfull{esb} to integrate different modules. However, it turned out that \acrshort{esb} is not suitable for data streaming and bulk data processing, as well as suffered from a single point of failure as it uses a common bus. We also attempted the Actor model with AKKA framework where each microservice was implemented using an actor. Microservice architectures were chosen as they are resilient, flexible, and scalable, as services were independent of each otehr. However, actors messaging between different services resulted in tight code coupling between the services and the platform was over dependent on the AKKA framework.
 %To overcome these issues, we moved to container orchestration based microservices architecture. 
@@ -295,16 +295,16 @@ Load testing was performed using Apache JMeter with distributed testing feature,
 \acrshort{wdias} was deployed using \acrfull{eks} container orchestration platform. \cref{ptab:aws_eks_nodes} shows the list of nodes used in the experimental setup. \db{\emph{Core} node executed metadata, extensions, query, status and extension microservices. Whereas the \emph{grid} node executed the grid adapter, as well as grid data import and export services. Scalar and vector adapters, as well as scalar and vector import and export services were deployed on the \emph{scalar} node. JMeter and metric server executed on the \emph{test} node.} Given a set of computing resources, to get the better performance, we scheduled each microservice on a predefined set of nodes.
 \dbc{Some of the terms in highlighted part was never mentioned in text. Hence, it's important that these are introduced in Sec. II.A}
 
-% \db{WDIAS, uses the Concurrency Thread Group with Throughput Shaping Timer because it supports the open workload approach.}
-% \dbc{Highlighted sentence is not clear to me.}
+\db{WDIAS, uses the Concurrency Thread Group with Throughput Shaping Timer because it supports the open workload approach.}
+\dbc{Highlighted sentence is not clear to me.}
 
-% \begin{itemize}
-%     \item \emph{closed system model} \cite{Haggett1998AnWales} -- a new request is only triggered by the completion of a previous request, following by a think time.
-%     \item \emph{open system model} -- new requests arrival independently of completions.
-% \end{itemize}
-% \dbc{What are these?}
+\begin{itemize}
+    \item \emph{closed system model} \cite{Haggett1998AnWales} -- a new request is only triggered by the completion of a previous request, following by a think time.
+    \item \emph{open system model} -- new requests arrival independently of completions.
+\end{itemize}
+\dbc{What are these?}
 
-\dbc{From Table II to V it seems we separated out timeseries and grid requests. It need to be mentioned in this sub-section to avoid any confusion.}
+\dbc{From Table II to V it seems we separated out timeseries and grid requests. Also, there are Insert, Retrieve, and query requests. These need to be clearly mentioned in this sub-section to avoid any confusion.}
 
 \begin{table}[tb!]
 \caption{\acrshort{eks} nodes}
@@ -336,7 +336,7 @@ test & 4 & 10.5 & 5 & 1 & c5n.xlarge \\ \hline
 
 From \cref{ptab:obs_all_60_min_summary_throughput} to \cref{ptab:obs_all_15_min_summary_throughput} it can be seen that the average and 90\% percentile latency to insert scalar and vector timeseries increased by 2 ms and 10 ms, respectively as we increase the request size. Still \acrshort{wdias} was able to accept 40.5 \acrshort{rps}. However, while retrieving the scalar and vector timeseries data, latency got doubled while handling the 15-min data compared to 30-min data. \db{This is due to heavy writes on the timeseries database.} However, there is no noticeable reduction in RPS. Therefore, even through the data volume increased by four times, \acrshort{wdias} performance degradation is sub-linear. 
 
-\dbc{How comeheavy writing happens when retrieving data? Shouldn't it happen during ingestion. Or is it because we are running data preprocessing at the time of request? This need to be clearly explained.}
+\dbc{How come heavy writing happens when retrieving data? Shouldn't it happen during ingestion. Or is it because we are running data preprocessing at the time of request? This need to be clearly explained.}
 
 \begin{table}[tb!]
 \centering
@@ -381,9 +381,11 @@ TOTAL & 310878 & 175.3 & 129 & 0 & 207.10 & 0.00\% \\ \hline
 \end{center}
 \end{table}
 
-Latency to insert grid timeseries data is relatively low compared to scalar or vector inserts as grid data are handle asynchronously. When the number of grid files doubled, latency also doubles. \db{Yet, \acrshort{wdias} was able to handle the all the incoming requests.}
+Latency to insert grid timeseries data is relatively low compared to scalar or vector inserts as grid data are handled asynchronously. When the number of grid files doubled, latency also doubled as \db{....} \db{Yet, \acrshort{wdias} was able to handle the all the incoming requests.}
 \dbc{We need to talk about why errors increased.}
-Retrieving of Grid timeseries data happens on demand during the load test. But it is possible to upgrade the system to support asynchronously download alongside with direct download. Because of that, the latency of download the the Grid data is bit higher than the other test cases. In that case also, the \acrshort{wdias} perform with keeping the same throughput with lower standard deviation which shows the scalability of the export Grid data module.
+\dbc{Explain why when the number of grid files double, latency also double. Is it because twice the bandwidth is needed?}
+\db{Retrieving of Grid timeseries data happens on demand during the load test. But it is possible to upgrade the system to support asynchronously download alongside with direct download. Because of that, the latency of download the the Grid data is bit higher than the other test cases.}
+\dbc{Highlighted text is not clear to me. Also, I'm confused about how asyn cases are handled for Insert and Retrieve. Did you measure latency to get only the unique ID or entire data?}
 
 \begin{table}[tb!]
 \caption{Performance while processing 15-min data requests.}
@@ -406,7 +408,8 @@ Query Location & 71749 & 40.5 & 3 & 4 & 2.32 & 0.00\% \\ \hline
 \end{center}
 \end{table}
 
-Throughout all test plans, the \acrshort{wdias} system performed better on serving the search queries based locations for Scalar and Vector timeseries. This is due to using indexing for server such queries. The \acrshort{wdias} was able to respond with 3ms most of the cases with keeping lower standard deviation.
+In all test cases, performance in resolving location-based queries remained the same. This was due to the geo-index build using the NoSQL database. 
+\dbc{When we change from 1H to 15min, was there any impact on location queries? My understanding is there no such change unless queries were issued more frequently (this seems to be not the case from 3 tables) or queries asked for more data?}
 % To get better performance test on the query module, we performed set of complex queries as shown in the \cref{ptab}
 
 \begin{table}[tb!]
@@ -430,26 +433,26 @@ Query Location & 71704 & 40.5 & 1 & 2 & 2.05 & 0.00\% \\ \hline
 \end{center}
 \end{table}
 
-\cref{ptab:obs_all_auto_15_min_summary_throughput} shows the \acrshort{wdias} performance with 15minutes data, but enabled auto-scaling. During above test cases, most resource utilized module was importing Grid data.
-The observations are almost similar to \cref{ptab:obs_all_15_min_summary_throughput}, but notably the error rate of insert Grid timeseries got reduced after enabled the auto-scaling for import Grid data module. Also the standard deviation for handling Grid data reduced which means system was able to perform more better than the previous test plan.
+\cref{ptab:obs_all_auto_15_min_summary_throughput} shows the performance when we enabled container auto-scaling. When we were inserting and retrieving data at 15-min resolution, microservices handling grid data had high resource utilization and 1.4\% of the grid insert requests failed. Once the auto-scaling was enabled, resource utilization of microservices were balanced. This reduced both the errors (0.18\%) and the overall latency for inserting and retrieving grid data.
 
 \begin{figure}[b!]
 \centerline{\includegraphics[width=0.5\textwidth]{results/obs/all_auto/obs_all_auto_15m_res_latencies_against_hits.png}}
-\caption{Response latencies against server hits over the elapsed time while performance test with 15min data and auto-scaling enabled.}
+\caption{Variation of request rate and latency with elapsed time with auto-scaling and 15-min data.}
 \label{pfi:test_obs_auto_all_15_min_latency_vs_hits}
 \end{figure}
 
-\cref{pfi:test_obs_auto_all_15_min_latency_vs_hits} shows the latency of each test case throughout total time of load testing with 15minutes data while enabled auto-scaling. As the Figure clearly shows while increasing the number of server hits for each test case, the system kept the latency constant without significant change. At the peak time, handling Grid data has some disturbances and inserting Scalar and Vector data has some random spikes in the latencies.
+\cref{pfi:test_obs_auto_all_15_min_latency_vs_hits} shows the latency of each request type under 15-min resolution and auto-scaling. Even through the request rate increased linearly (indicated by red line), no significant increase in latency was observed for request types other than grid data related requests (indicated by blue line). Even then, latency was within $2\times$ while the request rate was $5\times$.
 
-\begin{figure}[t!]
-\centerline{\includegraphics[width=0.5\textwidth]{results/obs/all_auto/obs_all_auto_15m_transaction_throughtput_vs_threads.png}}
-\caption{Transnational throughput vs number of active threads while performance test with 15min data and auto-scaling enabled.}
-\label{pfi:test_obs_auto_all_15_min_throughput_vs_threads}
-\end{figure}
+%\begin{figure}[t!]
+%\centerline{\includegraphics[width=0.5\textwidth]{results/obs/all_auto/obs_all_auto_15m_transaction_throughtput_vs_threads.png}}
+%\caption{Transnational throughput vs number of active threads while performance test with 15min data and auto-scaling enabled.}
+%\label{pfi:test_obs_auto_all_15_min_throughput_vs_threads}
+%\end{figure}
 
-\cref{pfi:test_obs_auto_all_15_min_throughput_vs_threads} shows the total server's transaction throughput against the number of active threads.
-The formula for total server transaction throughput is \(<active threads> * 1 second / <1 thread response time>\) \cite{JMeterPluginsTransactionPlugin}. It shows the statistical maximum possible number of transactions based on the number of users accessing the application.
-By combining the \cref{pfi:test_obs_auto_all_15_min_latency_vs_hits}, this graph shows that the throughput of the system gets increased without much change in the latency, thus it proves the scalability of the \acrshort{wdias}.
+%\cref{pfi:test_obs_auto_all_15_min_throughput_vs_threads} shows the total server's transaction throughput against the number of active threads.
+%The formula for total server transaction throughput is \(<active threads> * 1 second / <1 thread response time>\) \cite{JMeterPluginsTransactionPlugin}. It shows the statistical maximum possible number of transactions based on the number of users accessing the application.
+%By combining the \cref{pfi:test_obs_auto_all_15_min_latency_vs_hits}, this graph shows that the throughput of the system gets increased without much change in the latency, thus it proves the scalability of the \acrshort{wdias}.
+\dbc{I'm removing Fig. 7 as it's a forecast not actual results. Ok to keep this in thesis.}
 
 \begin{figure}[tb!]
     \centering
@@ -458,46 +461,52 @@ By combining the \cref{pfi:test_obs_auto_all_15_min_latency_vs_hits}, this graph
     \label{pfi:obs_all_auto_15m_import_grid_pod}
 \end{figure}
 
-\cref{pfi:obs_all_auto_15m_import_grid_pod} shows the number of import-ascii-grid-upload pods scheduled overtime. The auto-scaling enabled with the configurations of 1 to 10 pods with the recommended CPU usage with 80\%. And the pods scheduled with 1 CPU requested, and limit with 2 CPUs per pod.
-As the graph shows, 3 pods scheduled at the initial as per the configuration of the helm chart. While increasing the workload, new pods get spawn while keeping the constraint of 80\% of recommended CPU utilization. After \acrshort{k8s} spawn 10 maximum pods, it stops spawning new pods. But the pods were able to perform with vertical scaling since those are not hit the CPU limit of 2.
+\dbc{x and y axis of \cref{pfi:obs_all_auto_15m_import_grid_pod} need to be labelled}
+
+As the performance bottleneck was mostly on microservices handing grid data, in \cref{pfi:obs_all_auto_15m_import_grid_pod}, we look at how the number of \textit{import-ascii-grid-upload} pods are scheduled with time. \acrshort{k8s} auto-scalar was allowed to scale up to ten pods with a CPU utilization threshold of 80\%. A new pod was allowed to initiate with a single virtual CPU (vCPU) and was able to scale up to two vCPUs per pod. As shown in the graphs, three pods were scheduled initially as per the configuration of the helm chart. As the workload increased, a new pod was spawned when the average CPU utilization reached 80\%. Once the 10 pods were reached no new pods were spawned. Pods were also able to scale vertically up to two vCPUs. From the 0.18\% failed insert grid data operations, most of them were caused once the ten pod and 2 vCPUs per pod limit was reached. It was further noted that once the workload is cut off, the system gradually reduces the number of pods and reach the minimum configure value. 
+\dbc{Up to this point we didn't use the word pod. Would it be better to stick to word containers? Also, we never talked about a helm chart.}
+\dbc{Either in Sec II.B or III.A we need to briefly mention that grid operations are difficult to handle compared to scalar and vector.}
+\dbc{import-ascii-grid-upload was never mentioned}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Performance Metrics Analysis}
 \label{psubse:performance_metrics}
 
-The \emph{Latency} for each operation type kept constant over the whole test plan run time without any significant change. When the request size increased from 24 data points to 96 data points, the latency increase throughout the whole test plan with a smaller number. But for each test run, the latency kept constant over time.
-During the \cref{ptab:obs_all_auto_15_min_summary_throughput} test run, the performance of the Grid data got better when compared to \cref{ptab:obs_all_15_min_summary_throughput}. This means by adding more resources to the \acrshort{wdias}, it can handle more workload on the system.
+%The \emph{Latency} for each operation type kept constant over the whole test plan run time without any significant change. When the request size increased from 24 data points to 96 data points, the latency increase throughout the whole test plan with a smaller number. But for each test run, the latency kept constant over time.
+%During the \cref{ptab:obs_all_auto_15_min_summary_throughput} test run, the performance of the Grid data got better when compared to \cref{ptab:obs_all_15_min_summary_throughput}. This means by adding more resources to the \acrshort{wdias}, it can handle more workload on the system.
 
-While keeping the latency constant without significant change, the \emph{throughput} of the \acrshort{wdias} kept constant while increasing the request size from 60min data (24 data points) to 15min data (96 data points) for all the data types such as Scalar, Vector, and Grid.
-When the number of active threads increased, the \acrshort{wdias} able to provide the same throughput with maintaining the latency stable.
+%While keeping the latency constant without significant change, the \emph{throughput} of the \acrshort{wdias} kept constant while increasing the request size from 60min data (24 data points) to 15min data (96 data points) for all the data types such as Scalar, Vector, and Grid.
+%When the number of active threads increased, the \acrshort{wdias} able to provide the same throughput with maintaining the latency stable.
 
-One of the reasons for having deviations at the peak time due to uses of single instance for the data consistency such as InfluxDB for Scalar and Vector data, and netCDF with parallel support for Grid data. Further, it is possible to gain more performance using the databases with configure with high scalability and high availability features such as Sharding and Replication.
+%When looking into the \emph{resource utilization} of \acrshort{wdias}; since it is using the \acrshort{k8s} as the container orchestration system, it allows us to scale up and cool down the system as required based on the workload. This demonstrates the test plan of \cref{ptab:obs_all_15_min_summary_throughput}, and the system gets scale up to the maximum at the peak time. Then cool down to a single pod after finishing the test cases.
+%Given above \acrshort{wdias} can run from 1 CPU node to nodes with 100 CPUs. As described in the \cref{pse:wdias_architecture}, it uses many of the concepts of modern microservice architecture to create stateless, failover, redundant microservice to achieve such capabilities.
 
-When looking into the \emph{resource utilization} of \acrshort{wdias}; since it is using the \acrshort{k8s} as the container orchestration system, it allows us to scale up and cool down the system as required based on the workload. This demonstrates the test plan of \cref{ptab:obs_all_15_min_summary_throughput}, and the system gets scale up to the maximum at the peak time. Then cool down to a single pod after finishing the test cases.
-Given above \acrshort{wdias} can run from 1 CPU node to nodes with 100 CPUs. As described in the \cref{pse:wdias_architecture}, it uses many of the concepts of modern microservice architecture to create stateless, failover, redundant microservice to achieve such capabilities.
+%The \acrshort{wdias} supports \emph{auto scaling} by out of the box with \acrshort{k8s}. Services can configure with a maximum number of pods to avoid over resource usage. When there is not much workload on the system, the system cools down to fewer pods to save more resources. When there is an issue with a pod, \acrshort{k8s} auto-schedule another pod and remove the unhealthy pod. Also, it allows updating the system without any downtime with rollback updates.
 
-The \acrshort{wdias} supports \emph{auto scaling} by out of the box with \acrshort{k8s}. Services can configure with a maximum number of pods to avoid over resource usage. When there is not much workload on the system, the system cools down to fewer pods to save more resources. When there is an issue with a pod, \acrshort{k8s} auto-schedule another pod and remove the unhealthy pod. Also, it allows updating the system without any downtime with rollback updates.
-
-\emph{Risk of unable to process data} during the test performance, the \acrshort{wdias} processed many requests with higher request size than the normal usage with a lower rate of failures to process the requests, mainly with insert Grid data. If the usage of \acrshort{wdias} wants to reduce the risk of unable to process data, then the system can configure to run with redundant pods to handle spike of workloads. Also while configuring for the auto-scaling, the \acrshort{k8s} can configure to maintain a lower amount of CPU usage such as 50\% to 60\% rather than 80\%. Such configuration with always spawn new pods to handle double of current peak load.
+%\emph{Risk of unable to process data} during the test performance, the \acrshort{wdias} processed many requests with higher request size than the normal usage with a lower rate of failures to process the requests, mainly with insert Grid data. If the usage of \acrshort{wdias} wants to reduce the risk of unable to process data, then the system can configure to run with redundant pods to handle spike of workloads. Also while configuring for the auto-scaling, the \acrshort{k8s} can configure to maintain a lower amount of CPU usage such as 50\% to 60\% rather than 80\%. Such configuration with always spawn new pods to handle double of current peak load.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Discussion}
 \label{psubse:discussion}
 
-As we showed that the \acrshort{wdias} can perform better, there are some improvements that can add to improve the performance and usability of the system.
+As observed from above analysis \acrshort{wdias} could handle increasing workloads (in terms of both the request rate and request size) in a salable manner without a significant increase in latency or errors. It was further noted that auto-scaling containers lead to better performance at a reduced cost. \acrshort{wdias} has several other features/properties that is not covered under above analysis. For example, the extension module enables various prepossessing modules to be integrated into the system as plugins.
+With large-scale container orchestration, \acrshort{wdias} can be made to scale from a single vCPU node to nodes with 100s of vCPUs. Moreover, due to the microservices architecture, \acrshort{wdias} can create stateless and redundant modules with failover capabilities. For example, when there is an issue with a pod, container orchestration platform could auto-schedule another pod. Furthermore, microservices allow updating the system without any downtime with rollback updates.
+\dbc{Is ``rollback updates'' a standard word?}
+\dbc{While performance testing didn't we run in preprocessing modules? If so, it need to be clearly mentioned}
 
-\emph{Lack of data preprocessing modules}:
-The extension module enables the plugin system to integrate prepossessing modules that can use for process the data which are inserted to the system or based on regular intervals. Also, \acrshort{wdias} provides a more generic open interface approach to create more preprocessing modules. Since \acrshort{wdias} is an open-source system, it expects more modules to be created by the community. When compared to other systems like \acrshort{fews}, the current system only have few extensions but it is more easy to add new extensions compared to other systems.
+Somewhat high variability in insert and retrieval operations was due to the use of a single instance of InfluxDB to handle scalar and vector data. While the use of a single instance to avoided potential data consistency issues, it also constrained the throughput and increased the latency. Due to the microservices architecture it is possible to easily extend \acrshort{wdias} to support timeseries databases with sharding and replication features (e.g.,InfluxDB Enterprise edition). Further the use of flat files for netCDF affected the performance of grid data related requests. As microservices can be written in any programming language, more computationally heavy modules such as \acrshort{netCDF}-based grid data processing functions could be written in C or FORTRAN as opposed to our Python wrapper. 
+\dbc{one InfluxDB for both or one each?}
 
-Improve the \emph{Grid data performance} by porting \acrshort{netCDF} C or FORTRAN implementation with adapter-grid rather using a Python wrapper. Using tools like Terraform which is independent of the Cloud Computing provider \emph{define \acrshort{wdias} infrastructure as code}, then users will able to easily deploy the \acrshort{wdias} on any Cloud provider without much hassle. \emph{Tune \acrshort{wdias} database structure performance} with using Z-axis scaling. Some of other features are alerting extension modules, publisher subscriber capabilities via extension modules, supporting irregular Grids.
+%Also, \acrshort{wdias} provides a more generic open interface approach to create more preprocessing modules. Since \acrshort{wdias} is an open-source system, it expects more modules to be created by the community. When compared to other systems like \acrshort{fews}, the current system only have few extensions but it is more easy to add new extensions compared to other systems.
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Summary}
 \label{pse:summary}
 
-In this paper, we present an extendable open source weather data integration and assimilation system to overcome the issues in existing systems. Most systems are proprietary or closed source, based on client-server architectures or monolithic distribute architectures. The proposed system uses modern microservice architecture pattern and container orchestration to gain high scalability and availability. The \acrshort{wdias} used a database structure to store weather data optimum with high performance access. With microservice architecture, it creates stateless, failover, and redundant microservice, and provide a generic open model approach to integrate new modules as an extension. Further, the system provides an extension API to easily trigger extensions and support search queries with Geo-based support.
-We used an experimental K8s cluster setup on Cloud and showed WDIAS can handle 300 requests per second. The system was able to increase the throughput by keeping the latency constant while increasing the request size.
-Using \acrshort{k8s} auto-scaling, the system adjusts the number of pods elastically to handle the workload and shows that the system can run from a few CPU nodes to nodes with a few hundred CPUs.
+We presented a weather data integration and assimilation system based on the microservices architecture and container orchestration. As demonstrated by the performance analysis, \acrshort{wdias} can ingest, transform, and export scalar, vector, and grid timeseries data in multiple formats with good throughput and latency characteristics. Moreover, the combination of microservice architecture and container orchestration results in a extensible, scalable, available, and resource efficient system. In addition to adding more extension modules to manipulate timeseries data, in future, we plan to extend \acrshort{wdias} by introducing publisher-subscriber capabilities for data dissemination and support irregular grid and polygon data. Further, \acrshort{wdias} could be packaged as an infrastructure as code, using a tool like Terraform, to simplify the deployment on any Cloud provider. 
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Acknowledgment}
